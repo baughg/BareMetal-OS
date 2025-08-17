@@ -697,6 +697,10 @@ pde_end:
 ; Read APIC Address from MSR and enable it (if not done so already)
 	mov ecx, IA32_APIC_BASE
 	rdmsr				; Returns APIC in EDX:EAX
+	btc eax, 10	
+	btc eax, 11
+	wrmsr
+	rdmsr				; Returns APIC in EDX:EAX
 	bts eax, 11			; APIC Global Enable
 	wrmsr
 	and eax, 0xFFFFF000		; Clear lower 12 bits

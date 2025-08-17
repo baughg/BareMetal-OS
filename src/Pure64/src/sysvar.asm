@@ -25,6 +25,7 @@ p_LocalAPICAddress:	equ SystemVariables + 0x10
 p_Counter_Timer:	equ SystemVariables + 0x18
 p_Counter_RTC:		equ SystemVariables + 0x20
 p_HPET_Address:		equ SystemVariables + 0x28
+p_APIC_Version      equ SystemVariables + 0x30
 
 ; DD - Starting at offset 0x80, increments by 4
 p_BSP:			equ SystemVariables + 0x80

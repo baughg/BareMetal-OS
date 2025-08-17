@@ -175,6 +175,7 @@ avx512_not_supported:
 	lock inc word [p_cpu_activated]
 	mov ecx, APIC_ID
 	call apic_read			; APIC ID is stored in bits 31:24
+	mov [p_APIC_Version], eax
 	shr eax, 24			; AL now holds the CPU's APIC ID (0 - 255)
 	mov rdi, IM_ActivedCoreIDs	; The location where the activated cores set their record to 1
 	add rdi, rax			; RDI points to InfoMap CPU area + APIC ID. ex 0x5E01 would be APIC ID 1
