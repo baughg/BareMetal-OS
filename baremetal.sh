@@ -20,7 +20,7 @@ cmd=( qemu-system-x86_64
 	-device VGA,edid=on,xres=1024,yres=768
 
 # Network configuration. Use one controller.
-	-netdev socket,id=testnet1,listen=:1234
+	-netdev socket,id=testnet1,listen=:1200
 #	-netdev socket,id=testnet2,listen=:1235
 # Intel 82540EM
 	-device e1000,netdev=testnet1,mac=10:11:12:08:25:40
@@ -352,7 +352,7 @@ function baremetal_run-uefi {
 
 	cmd+=( -bios sys/OVMF.fd )
 	cmd+=( -name "BareMetal OS UEFI" )
-
+	
 	#execute the cmd string
 	if [ -x "$(command -v mformat)" ]; then
 		"${cmd[@]}"
