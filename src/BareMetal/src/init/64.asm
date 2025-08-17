@@ -127,8 +127,6 @@ make_interrupt_gate_stubs:
 	xor eax, eax
 	mov cx, 255
 	mov esi, 0x00005100		; Location in memory of the Pure64 CPU data
-	
-	;jmp no_more_aps ; fix for hang on real hw. G.B.
 next_ap:
 	test cx, cx
 	jz no_more_aps
@@ -140,7 +138,7 @@ skip_ap:
 	dec cx
 	jmp next_ap
 no_more_aps:
-	
+
 	; Configure the serial port
 	call serial_init
 

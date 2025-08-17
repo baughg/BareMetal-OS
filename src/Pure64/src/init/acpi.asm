@@ -169,7 +169,7 @@ novalidacpi:
 parseAPICTable:
 	push rcx
 	push rdx
-	mov [p_MADTAddress], esi
+
 	lodsd				; Length of MADT in bytes
 	mov ecx, eax			; Store the length in ECX
 	xor ebx, ebx			; EBX is the counter
@@ -186,11 +186,10 @@ parseAPICTable:
 	add ebx, 44
 	mov rdi, 0x0000000000005100	; Valid CPU IDs
 
-readAPICstructures:	
+readAPICstructures:
 	cmp ebx, ecx
 	jae parseAPICTable_done
 	lodsb				; APIC Structure Type
-
 	cmp al, 0x00			; Processor Local APIC
 	je APICapic
 	cmp al, 0x01			; I/O APIC
@@ -209,11 +208,11 @@ readAPICstructures:
 ;	je APIClocalsapic
 ;	cmp al, 0x08			; Platform Interrupt Source Structure
 ;	je APICplatformint
-	cmp al, 0x09			; Processor Local x2APIC
-	je APICx2apic
+;	cmp al, 0x09			; Processor Local x2APIC
+;	je APICx2apic
 ;	cmp al, 0x0A			; Local x2APIC NMI
 ;	je APICx2nmi
-	
+
 	jmp APICignore
 
 ; Processor Local APIC Structure - 5.2.12.2
@@ -224,11 +223,6 @@ APICapic:				; Entry Type 0
 	add ebx, eax
 	lodsb				; ACPI Processor ID
 	lodsb				; APIC ID
-	;mov [p_APICID],eax
-	push rax
-	mov rax, 0xbeef
-	mov [p_APICID],eax
-	pop rax
 	xchg eax, edx			; Save the APIC ID to EDX
 	lodsd				; Flags (Bit 0 set if enabled/usable)
 	bt eax, 0			; Test to see if usable
@@ -239,7 +233,7 @@ APICapic:				; Entry Type 0
 	jmp readAPICstructures		; Read the next structure
 
 ; I/O APIC Structure - 5.2.12.3
-APICioapic:				; Entry Type 1	
+APICioapic:				; Entry Type 1
 	xor eax, eax
 	lodsb				; Length (will be set to 12)
 	add ebx, eax
@@ -289,23 +283,22 @@ APICinterruptsourceoverride:		; Entry Type 2
 	jmp readAPICstructures		; Read the next structure
 
 ; Processor Local x2APIC Structure - 5.2.12.12
-APICx2apic:				; Entry Type 9
-	
-	xor eax, eax
-	xor edx, edx
-	lodsb				; Length (will be set to 16)
-	add ebx, eax
-	lodsw				; Reserved; Must be Zero
-	lodsd	
-	xchg eax, edx			; Save the x2APIC ID to EDX
-	lodsd				; Flags (Bit 0 set if enabled/usable)
-	bt eax, 0			; Test to see if usable
-	jnc APICx2apicEnd		; Read the next structure if CPU not usable
-	xchg eax, edx			; Restore the x2APIC ID back to EAX
-	; TODO - Save the ID's somewhere
-APICx2apicEnd:
-	lodsd				; ACPI Processor UID
-	jmp readAPICstructures		; Read the next structure
+;APICx2apic:				; Entry Type 9
+;	xor eax, eax
+;	xor edx, edx
+;	lodsb				; Length (will be set to 16)
+;	add ebx, eax
+;	lodsw				; Reserved; Must be Zero
+;	lodsd
+;	xchg eax, edx			; Save the x2APIC ID to EDX
+;	lodsd				; Flags (Bit 0 set if enabled/usable)
+;	bt eax, 0			; Test to see if usable
+;	jnc APICx2apicEnd		; Read the next structure if CPU not usable
+;	xchg eax, edx			; Restore the x2APIC ID back to EAX
+;	; TODO - Save the ID's somewhere
+;APICx2apicEnd:
+;	lodsd				; ACPI Processor UID
+;	jmp readAPICstructures		; Read the next structure
 
 APICignore:
 	xor eax, eax
@@ -316,10 +309,6 @@ APICignore:
 	jmp readAPICstructures		; Read the next structure
 
 parseAPICTable_done:
-	; push rax
-	; mov rax,rsi
-	; mov [p_APICDebug], eax
-	; pop rax	
 	pop rdx
 	pop rcx
 	ret

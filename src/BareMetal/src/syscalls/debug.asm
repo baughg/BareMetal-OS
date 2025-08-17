@@ -30,8 +30,6 @@ os_debug_dump_ax:
 	rol ax, 8
 	call os_debug_dump_al
 	rol ax, 8
-	
-
 os_debug_dump_al:
 	push rax
 	push ax				; Save AX for the low nibble
@@ -140,21 +138,6 @@ os_debug_newline:
 	ret
 ; -----------------------------------------------------------------------------
 
-; -----------------------------------------------------------------------------
-; os_debug_newline -- Output a carriage return
-;  IN:	Nothing
-; OUT:	Nothing, all registers preserved
-os_debug_carriage_return:
-	push rsi
-	push rcx
-	mov rsi, carriage_return
-	mov rcx, 1
-	call b_output
-	pop rcx
-	pop rsi
-	ret
-; -----------------------------------------------------------------------------
-
 
 ; -----------------------------------------------------------------------------
 ; os_debug_space -- Output a space
@@ -212,7 +195,7 @@ os_debug_block:
 
 	; Draw the 8x8 pixel block
 	mov ebx, 8			; 8 pixels tall
-	mov eax, 0x0000CA54		; Return Infinity green
+	mov eax, 0x00F7CA54		; Return Infinity Yellow/Orange
 os_debug_block_nextline:
 	mov ecx, 8			; 8 pixels wide
 	rep stosd

@@ -8,7 +8,6 @@
 
 ; Strings
 newline:		db 13, 10, 0
-carriage_return: db 13, 0
 space:			db ' ', 0
 system_status_header:	db 'BareMetal v1.0.0', 0
 

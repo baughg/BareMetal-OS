@@ -64,7 +64,6 @@ os_ioapic_mask_clear:
 	call os_ioapic_write		; Write the low 32 bits
 	add ecx, 1			; Increment for next register
 	xor eax, eax
-	mov eax, [0x5830] ; p_APIC_Version
 	call os_ioapic_write		; Write the high 32 bits
 	pop rax
 	pop rcx

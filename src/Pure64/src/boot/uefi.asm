@@ -102,7 +102,7 @@ EntryPoint:
 	mov [EFI_SYSTEM_TABLE], rdx
 	mov [EFI_RETURN], rsp
 	sub rsp, 6*8+8						; Fix stack
-	
+
 	; When calling an EFI function the caller must pass the first 4 integer values in registers
 	; via RCX, RDX, R8, and R9
 	; 5 and onward are on the stack after the 32 byte shadow space

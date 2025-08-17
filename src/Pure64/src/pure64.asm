@@ -47,63 +47,6 @@ BITS 16
 
 %include "init/smp_ap.asm"		; AP's will start execution at 0x8000 and fall through to this code
 
-; -----------------------------------------------------------------------------
-; debug_block - Create a block of colour on the screen
-; IN:	EBX = Index #
-debug_block:
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rdi
-
-	; Calculate parameters
-	push rbx
-	push rax
-	xor edx, edx
-	xor eax, eax
-	xor ebx, ebx
-	mov ax, [0x00005F00 + 0x12]	; Screen Y
-	sub ax, 16			; Upper row
-	shr ax, 1			; Quick divide by 2
-	mov bx, [0x00005F00 + 0x10]	; Screen X
-	shl ebx, 2			; Quick multiply by 4
-	mul ebx				; Multiply EDX:EAX by EBX
-	mov rdi, [0x00005F00]		; Frame buffer base
-	add rdi, rax			; Offset is ((screeny - 8) / 2 + screenx * 4)
-	pop rax
-	pop rbx
-	xor edx, edx
-	mov dx, [0x00005F00 + 0x14]	; PixelsPerScanLine
-	shl edx, 2			; Quick multiply by 4 for line offset
-	xor ecx, ecx
-	mov cx, [0x00005F00 + 0x10]	; Screen X
-	shr cx, 4			; Quick divide by 16 (box width plus blank width)
-	sub cx, 8			; CX = total amount of 8-pixel wide blocks
-	add ebx, ecx
-	shl ebx, 5			; Quick multiply by 32 (8 pixels by 4 bytes each)
-	add rdi, rbx
-	sub rdi, 16			; Move left by half a box width (4 pixels by 4 bytes each)
-
-	; Draw the 8x8 pixel block
-	mov ebx, 8			; 8 pixels tall
-	mov eax, 0x00F7CA54		; Return Infinity Yellow/Orange
-nextline:
-	mov ecx, 8			; 8 pixels wide
-	rep stosd
-	add rdi, rdx			; Add line offset
-	sub rdi, 8*4			; 8 pixels by 4 bytes each
-	dec ebx
-	jnz nextline
-
-	pop rdi
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
-	ret
-; -----------------------------------------------------------------------------
-
 ; =============================================================================
 ; This is 32-bit code so it's important that the encoding of the first few instructions also
 ; work in 64-bit mode. If a 'U' is stored at 0x5FFF then we know it was a UEFI boot and can
@@ -522,7 +465,7 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov word [0x15*16], exception_gate_21	; #CP
 
 	lidt [IDTR64]			; load IDT register
-	
+
 ; Patch Pure64 AP code			; The AP's will be told to start execution at 0x8000
 	mov edi, start			; We need to remove the BSP Jump call to get the AP's
 	mov eax, 0x90909090		; to fall through to the AP Init code
@@ -754,17 +697,13 @@ pde_end:
 ; Read APIC Address from MSR and enable it (if not done so already)
 	mov ecx, IA32_APIC_BASE
 	rdmsr				; Returns APIC in EDX:EAX
-	btc eax, 10	
-	btc eax, 11
-	wrmsr
-	rdmsr				; Returns APIC in EDX:EAX
 	bts eax, 11			; APIC Global Enable
 	wrmsr
 	and eax, 0xFFFFF000		; Clear lower 12 bits
 	shl rdx, 32			; Shift lower 32 bits to upper 32 bits
 	add rax, rdx
 	mov [p_LocalAPICAddress], rax
-	
+
 ; Check for x2APIC support
 	mov eax, 1
 	cpuid				; x2APIC is supported if bit 21 is set
@@ -985,7 +924,62 @@ clear_regs:
 %include "sysvar.asm"
 
 
+; -----------------------------------------------------------------------------
+; debug_block - Create a block of colour on the screen
+; IN:	EBX = Index #
+debug_block:
+	push rax
+	push rbx
+	push rcx
+	push rdx
+	push rdi
 
+	; Calculate parameters
+	push rbx
+	push rax
+	xor edx, edx
+	xor eax, eax
+	xor ebx, ebx
+	mov ax, [0x00005F00 + 0x12]	; Screen Y
+	sub ax, 16			; Upper row
+	shr ax, 1			; Quick divide by 2
+	mov bx, [0x00005F00 + 0x10]	; Screen X
+	shl ebx, 2			; Quick multiply by 4
+	mul ebx				; Multiply EDX:EAX by EBX
+	mov rdi, [0x00005F00]		; Frame buffer base
+	add rdi, rax			; Offset is ((screeny - 8) / 2 + screenx * 4)
+	pop rax
+	pop rbx
+	xor edx, edx
+	mov dx, [0x00005F00 + 0x14]	; PixelsPerScanLine
+	shl edx, 2			; Quick multiply by 4 for line offset
+	xor ecx, ecx
+	mov cx, [0x00005F00 + 0x10]	; Screen X
+	shr cx, 4			; Quick divide by 16 (box width plus blank width)
+	sub cx, 8			; CX = total amount of 8-pixel wide blocks
+	add ebx, ecx
+	shl ebx, 5			; Quick multiply by 32 (8 pixels by 4 bytes each)
+	add rdi, rbx
+	sub rdi, 16			; Move left by half a box width (4 pixels by 4 bytes each)
+
+	; Draw the 8x8 pixel block
+	mov ebx, 8			; 8 pixels tall
+	mov eax, 0x00F7CA54		; Return Infinity Yellow/Orange
+nextline:
+	mov ecx, 8			; 8 pixels wide
+	rep stosd
+	add rdi, rdx			; Add line offset
+	sub rdi, 8*4			; 8 pixels by 4 bytes each
+	dec ebx
+	jnz nextline
+
+	pop rdi
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
+	ret
+; -----------------------------------------------------------------------------
 
 
 %ifdef BIOS

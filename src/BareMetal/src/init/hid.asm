@@ -9,8 +9,8 @@
 ; -----------------------------------------------------------------------------
 init_hid:
 	; Configure the PS/2 keyboard and mouse (if they exist)
-	call ps2_init	
-	;jmp init_hid_done ; usb enum hanging G.B.
+	call ps2_init
+
 	; Enumerate USB devices
 	bt qword [os_SysConfEn], 5
 	jnc init_hid_done

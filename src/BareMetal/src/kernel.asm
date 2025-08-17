@@ -32,21 +32,15 @@ align 16
 align 16
 start:
 	mov rsp, 0x10000		; Set the temporary stack
+
 	; System and driver initialization
 	call init_64			; After this point we are in a working 64-bit environment
-
 	call init_bus			; Initialize system busses
 	call init_nvs			; Initialize non-volatile storage
 	call init_net			; Initialize network
-
 	call init_hid			; Initialize human interface devices
-	
 	call init_sys			; Initialize system
-	push rbx
-	mov ebx, 16
-	call os_debug_block
-	pop rbx
-	
+
 	; Set the payload to run
 start_payload:
 	cmp byte [os_payload], 0
@@ -67,10 +61,6 @@ start_payload:
 	mov rcx, rbx			; Copy the APIC ID for b_smp_set
 	mov rax, 0x1E0000		; Payload was copied here
 	call b_smp_set
-	push rbx
-	mov ebx, 18
-	call os_debug_block
-	pop rbx
 	jmp bsp				; Skip to bsp as payload was prepped
 
 align 16
@@ -133,13 +123,6 @@ ap_process:
 	mov rcx, 1			; Set the active flag
 	call b_smp_setflag
 	xor ecx, ecx
-; 	push rax
-; 	xor rax,rax
-; 	mov eax, [0x5830]
-; 	call os_debug_dump_rax
-; 	pop rax
-; pause_loop:
-; 	jmp pause_loop
 	call rax			; Run the code
 	jmp ap_clear			; Reset the stack, clear the registers, and wait for something else to work on
 

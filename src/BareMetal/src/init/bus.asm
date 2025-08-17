@@ -43,7 +43,6 @@ init_bus:
 
 init_bus_pcie_probe:
 	call os_pcie_read		; Read a Device ID/Vendor ID
-
 	cmp eax, 0xFFFFFFFF		; 0xFFFFFFFF is returned for an non-existent device
 	je init_bus_pcie_probe_next	; Skip to next device
 
@@ -55,7 +54,6 @@ init_bus_pcie_probe_found:
 	stosd				; Store it to the Bus Table
 	add edx, 2			; Register 2 for Class code/Subclass/Prog IF/Revision ID
 	call os_pcie_read
-
 	shr eax, 16			; Move the Class/Subclass code to AX
 	stosd				; Store it to the Bus Table
 	sub edx, 2
@@ -67,7 +65,6 @@ init_bus_pcie_probe_found:
 init_bus_pcie_probe_next:
 	add rdx, 0x00010000		; Skip to next PCIe device/function
 	cmp edx, 0			; Overflow EDX for a maximum of 65536 devices per segment
-
 	je init_bus_end
 	jmp init_bus_pcie_probe
 
@@ -77,7 +74,6 @@ init_bus_pci:
 	out dx, eax
 	in eax, dx
 	cmp eax, 0x80000000
-
 	jne init_bus_pci_not_found	; Exit if PCI wasn't found
 	mov byte [os_BusEnabled], 1	; Bit 0 set for PCI
 	xor edx, edx
@@ -131,7 +127,6 @@ init_bus_usb_check:
 	mov ax, [rsi]			; Load Class Code / Subclass Code
 	cmp ax, 0xFFFF			; Check if at end of list
 	je init_bus_usb_not_found
-
 	cmp ax, 0x0C03			; Serial Bus Controller (0C) / USB Controller (03)
 	je init_bus_usb_find_driver
 	jmp init_bus_usb_check		; Check Bus Table again
@@ -142,7 +137,6 @@ init_bus_usb_find_driver:
 	mov edx, [rsi]			; Load value for os_bus_read/write
 	mov dl, 0x02
 	call os_bus_read
-
 	shr eax, 8			; Shift Program Interface to AL
 	cmp al, 0x30			; PI for XHCI
 	je init_bus_usb_xhci_start
@@ -153,6 +147,7 @@ init_bus_usb_xhci_start:
 	call xhci_init
 
 init_bus_usb_not_found:
+
 	; Output block to screen (4/8)
 	mov ebx, 6
 	call os_debug_block

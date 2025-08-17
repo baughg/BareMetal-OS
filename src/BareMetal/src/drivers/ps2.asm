@@ -11,7 +11,6 @@ ps2_init:
 	; Check if PS/2 is present via ACPI IAPC_BOOT_ARCH
 	mov ax, [os_boot_arch]
 	bt ax, 1			; 8042
-
 	jnc ps2_init_error
 
 	call ps2_flush			; Read any pending data
@@ -29,7 +28,6 @@ ps2_init:
 	mov al, PS2_CTRL_TEST
 	call ps2_send_cmd
 	call ps2_read_data
-
 	cmp al, 0x55			; 0x55 means test passed
 	jne ps2_init_error		; Bail out otherwise
 
@@ -79,10 +77,6 @@ ps2_init:
 	mov edi, 0x21
 	mov rax, int_keyboard
 	call create_gate
-	; push rax
-	; xor rax,rax
-	; mov byte [0x215],0x8E
-	; pop rax
 init_64_no_ps2keyboard:
 	bt ebx, 0
 	jnc init_64_no_ps2mouse
@@ -94,11 +88,11 @@ init_64_no_ps2mouse:
 	; Enable specific interrupts
 	mov ecx, 1			; Keyboard IRQ
 	mov eax, 0x21			; Keyboard Interrupt Vector
-
 	call os_ioapic_mask_clear
 	mov ecx, 12			; Mouse IRQ
 	mov eax, 0x2C			; Mouse Interrupt Vector
 	call os_ioapic_mask_clear
+
 ps2_init_error:
 	ret
 ; -----------------------------------------------------------------------------
@@ -113,7 +107,6 @@ ps2_keyboard_interrupt:
 	xor eax, eax
 
 	in al, PS2_DATA			; Get the scan code from the keyboard
-
 	cmp al, 0x01
 	je keyboard_escape
 	cmp al, 0x1D

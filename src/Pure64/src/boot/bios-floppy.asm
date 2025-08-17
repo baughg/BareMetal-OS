@@ -192,7 +192,7 @@ halt:
 load_sector:
 	xor ah, ah			; Reset drive function
 	int 0x13
-	
+
 	mov bx, [sec_buff]
 	mov dl, [DriveNumber]
 	mov dh, [head]

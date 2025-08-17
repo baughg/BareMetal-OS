@@ -70,7 +70,6 @@ bootcode:
 	sti				; Enable interrupts
 
 	mov [DriveNumber], dl		; BIOS passes drive number in DL
-		
 
 ; Get the BIOS E820 Memory Map
 ; https://wiki.osdev.org/Detecting_Memory_(x86)#BIOS_Function:_INT_0x15,_EAX_=_0xE820

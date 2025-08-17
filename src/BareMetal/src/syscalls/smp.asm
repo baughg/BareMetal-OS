@@ -20,19 +20,6 @@ b_smp_reset_wait:
 	mov ecx, APIC_ICRL
 	call os_apic_read
 	bt eax, 12		; Check if Delivery Status is 0 (Idle)
-	; push rax
-	; push rdx
-	; mov ecx, APIC_VER
-	; call os_apic_read
-	; mov eax, 1
-	; cpuid
-	; mov rax, rdx
-	; mov ecx, 0x01B
-	; rdmsr				; Returns APIC in EDX:EAX
-	;bts eax, 11			; APIC Global Enable
-	; call os_debug_dump_rax
-	; pop rax
-	; pop rdx
 	jc b_smp_reset_wait	; If not, wait - a send is already pending
 	mov rax, [rsp]		; Retrieve CPU APIC # from the stack
 	mov ecx, APIC_ICRH
