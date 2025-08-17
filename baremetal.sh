@@ -95,16 +95,16 @@ if [ "x$BMFS_SIZE" = x ]; then
 fi
 
 function baremetal_clean {
-	rm -rf src
-	rm -rf sys
+	# rm -rf src
+	# rm -rf sys
 }
 
 function baremetal_setup {
 	echo -e "BareMetal OS Setup\n==================="
 	baremetal_clean
 
-	mkdir src
-	mkdir sys
+	# mkdir src
+	# mkdir sys
 
 	echo -n "Pulling code from GitHub"
 
@@ -116,28 +116,28 @@ function baremetal_setup {
 		setup_args=" -q --depth 1"
 	fi
 
-	cd src
-	git clone https://github.com/ReturnInfinity/Pure64.git $setup_args
-	git clone https://github.com/ReturnInfinity/BareMetal.git $setup_args
-	git clone https://github.com/ReturnInfinity/BareMetal-Monitor.git $setup_args
-	git clone https://github.com/ReturnInfinity/BMFS.git $setup_args
-	git clone https://github.com/ReturnInfinity/BareMetal-Demo.git $setup_args
-	cd ..
-	echo "OK"
+	# cd src
+	# git clone https://github.com/ReturnInfinity/Pure64.git $setup_args
+	# git clone https://github.com/ReturnInfinity/BareMetal.git $setup_args
+	# git clone https://github.com/ReturnInfinity/BareMetal-Monitor.git $setup_args
+	# git clone https://github.com/ReturnInfinity/BMFS.git $setup_args
+	# git clone https://github.com/ReturnInfinity/BareMetal-Demo.git $setup_args
+	# cd ..
+	# echo "OK"
 
-	if [ -x "$(command -v mformat)" ]; then
-		echo -n "Downloading UEFI firmware... "
-		cd sys
-		if [ -x "$(command -v curl)" ]; then
-			curl -s -o OVMF.fd https://cdn.download.clearlinux.org/image/OVMF.fd
-		else
-			wget -q https://cdn.download.clearlinux.org/image/OVMF.fd
-		fi
-		cd ..
-		echo "OK"
-	else
-		echo "Skipping UEFI firmware download due to missing mtools..."
-	fi
+	# if [ -x "$(command -v mformat)" ]; then
+	# 	echo -n "Downloading UEFI firmware... "
+	# 	cd sys
+	# 	if [ -x "$(command -v curl)" ]; then
+	# 		curl -s -o OVMF.fd https://cdn.download.clearlinux.org/image/OVMF.fd
+	# 	else
+	# 		wget -q https://cdn.download.clearlinux.org/image/OVMF.fd
+	# 	fi
+	# 	cd ..
+	# 	echo "OK"
+	# else
+	# 	echo "Skipping UEFI firmware download due to missing mtools..."
+	# fi
 
 	echo -n "Preparing dependancies... "
 	cd src/BareMetal-Monitor
