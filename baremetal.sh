@@ -97,6 +97,7 @@ fi
 function baremetal_clean {
 	# rm -rf src
 	# rm -rf sys
+	echo "clean"
 }
 
 function baremetal_setup {
