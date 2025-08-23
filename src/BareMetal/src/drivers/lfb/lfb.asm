@@ -515,9 +515,9 @@ lfb_draw_line_skip:
 ; Font data - Only 1 font may be used
 align 16
 ;%include 'drivers/lfb/fonts/smol.fnt' ; 8x4
-%include 'drivers/lfb/fonts/baremetal.fnt' ; 12x6
+;%include 'drivers/lfb/fonts/baremetal.fnt' ; 12x6
 ;%include 'drivers/lfb/fonts/departuremono.fnt' ; 14x7
-;%include 'drivers/lfb/fonts/ibm.fnt' ; 16x8
+%include 'drivers/lfb/fonts/ibm.fnt' ; 16x8
 
 
 ; Variables

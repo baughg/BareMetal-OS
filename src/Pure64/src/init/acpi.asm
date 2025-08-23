@@ -346,7 +346,8 @@ parseHPETTable:
 ; -----------------------------------------------------------------------------
 ; PCI Express Memory-mapped Configuration (MCFG)
 ; Locked behind a paywall - Search Google for "pcie specification pdf"
-parseMCFGTable:
+parseMCFGTable:	
+	mov [0x5840], rsi	; G.B.
 	push rdi
 	push rcx
 	xor eax, eax

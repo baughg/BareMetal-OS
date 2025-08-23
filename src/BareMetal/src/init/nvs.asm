@@ -17,7 +17,8 @@ init_nvs_nvme_check:
 	add rsi, 16			; Increment to next record in memory
 	mov ax, [rsi]			; Load Class Code / Subclass Code
 	cmp ax, 0xFFFF			; Check if at end of list
-	je init_nvs_nvme_skip		; If no NVMe the bail out
+	;je init_nvs_nvme_skip		; If no NVMe the bail out
+	jmp init_nvs_nvme_skip
 	cmp ax, 0x0108			; Mass Storage Controller (01) / NVMe Controller (08)
 	je init_nvs_nvme
 	jmp init_nvs_nvme_check		; Check Bus Table again
@@ -41,12 +42,14 @@ init_nvs_check_bus:
 	jmp init_nvs_check_bus		; Check Bus Table again
 
 init_nvs_nvme:
+	mov dword [0x5894], eax
 	sub rsi, 8			; Move RSI back to start of Bus record
 	mov edx, [rsi]			; Load value for os_bus_read/write
 	call nvme_init
 	jmp init_nvs_done
 
 init_nvs_ahci:
+	mov dword [0x5890], eax
 	sub rsi, 8			; Move RSI back to start of Bus record
 	mov edx, [rsi]			; Load value for os_bus_read/write
 	call ahci_init

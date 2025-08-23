@@ -132,6 +132,11 @@ MACdone:
 	mov rsi, rdi
 	call [b_nvs_read]
 	mov eax, [rsi+1024]
+	push rax
+	call [0x589c]
+	pop rax
+pause_loop:
+	jmp pause_loop
 	cmp eax, 0x53464d42		; "BMFS"
 	je bmfs
 	jmp poll

@@ -94,7 +94,8 @@ os_pcie_convert_valid:
 	shl edx, 2			; Quick multiply by 4
 	add rsi, rdx			; Add offset for the register
 	mov rdx, rsi			; Store final memory address in RDX
-
+; pause_loop:
+; 	jmp pause_loop
 	pop rax
 	pop rsi
 	ret

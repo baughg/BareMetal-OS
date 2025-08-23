@@ -28,9 +28,11 @@
 
 ; -----------------------------------------------------------------------------
 init_bus:
+	mov qword [0x11c000], 0 ; G.B.
+	mov qword [0x11d000], 0 ; G.B.
 	mov rdi, bus_table		; Address of Bus Table in memory
-	xor edx, edx			; Register 0 for Device ID/Vendor ID
-
+	xor edx, edx			; Register 0 for Device ID/Vendor ID	
+	;mov rdx, 0x00010002 ; G.B.
 	; Check for PCIe first
 	mov cx, [os_pcie_count]		; Check for PCIe
 	cmp cx, 0
@@ -55,6 +57,14 @@ init_bus_pcie_probe_found:
 	add edx, 2			; Register 2 for Class code/Subclass/Prog IF/Revision ID
 	call os_pcie_read
 	shr eax, 16			; Move the Class/Subclass code to AX
+	; debug
+	push rcx
+	mov ecx, [0x11c000]
+	mov [0x11c008 + 8*ecx], rax
+	inc ecx
+	mov [0x11c000], ecx
+	pop rcx
+	; debug
 	stosd				; Store it to the Bus Table
 	sub edx, 2
 	xor eax, eax			; Pad the Bus Table to 16 bytes
@@ -139,12 +149,14 @@ init_bus_usb_find_driver:
 	call os_bus_read
 	shr eax, 8			; Shift Program Interface to AL
 	cmp al, 0x30			; PI for XHCI
-	je init_bus_usb_xhci_start
+	;je init_bus_usb_xhci_start
+	call init_bus_usb_xhci_start
 	add rsi, 8
 	jmp init_bus_usb_check
 
-init_bus_usb_xhci_start:
+init_bus_usb_xhci_start:	
 	call xhci_init
+	ret
 
 init_bus_usb_not_found:
 
