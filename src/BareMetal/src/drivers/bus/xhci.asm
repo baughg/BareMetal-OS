@@ -1885,7 +1885,7 @@ uloop:
 	mov [0x11d008 + 8*r8], r10
 	inc r8	
 	inc rdx
-	cmp rdx, 0x4
+	cmp rdx, 0x8
 	jl uloop
 
 	mov [0x11d000], r8
