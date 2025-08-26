@@ -1288,38 +1288,170 @@ xhci_check_command_event_timeout_dbg:
 ; -----------------------------------------------------------------------------
 
 found_mass_storage:
-    ; Read descriptor using transfer ring
-	; Setup Stage
-	mov eax, 0x01000680		; 0x01 Device Descriptor
-	stosd				; dword 0 - wValue (31:16), bRequest (15:8), bmRequestType (7:0)
-	mov eax, 0x01000000		; Request 8 bytes
-	stosd				; dword 1 - wLength (31:16), wIndex (15:0)
+;     ; Read descriptor using transfer ring
+; 	; Setup Stage
+; 	mov eax, 0x01000680		; 0x01 Device Descriptor
+; 	stosd				; dword 0 - wValue (31:16), bRequest (15:8), bmRequestType (7:0)
+; 	mov eax, 0x01000000		; Request 8 bytes
+; 	stosd				; dword 1 - wLength (31:16), wIndex (15:0)
+; 	mov eax, 0x00000008
+; 	stosd				; dword 2 - Interrupter Target (31:22), TRB Transfer Length (16:0)
+; 	mov eax, 0x00030841		; TRT 3, TRB Type 2, IDT, C
+; 	stosd				; dword 3 - TRT (17:16), TRB Type (15:10), IDT (6), IOC (5), C (0)
+; 	; Data Stage
+; 	mov rax, os_usb_data0
+; 	stosq				; dword 0 & 1 - Data Buffer (63:0)
+; 	mov eax, 0x00000100		; Request 8 bytes
+; 	stosd				; dword 2 - Interrupter Target (31:22), TD Size (21:17), TRB Transfer Length (16:0)
+; 	mov eax, 0x00010C01		; DIR, TRB Type 3, C
+; 	stosd				; dword 3 - DIR (16), TRB Type (15:10), IDT (6), IOC (5), CH (4), NS (3), ISP (2), ENT (1), C (0)
+; 	; Status Stage
+; 	xor eax, eax
+; 	stosq				; dword 0 & 1 - Reserved Zero
+; 	stosd				; dword 2 - Interrupter Target (31:22)
+; 	mov eax, 0x00001013		; TRB Type 4, CH, ENT, C
+; 	stosd				; dword 3 - DIR (16), TRB Type (15:10), IOC (5), CH (4), ENT (1), C (0)
+; 	; Event Data
+; 	add qword [os_usb_evtoken], 1
+; 	mov rax, [os_usb_evtoken]
+; 	push rax
+; 	stosq				; dword 0 & 1 - Data Buffer (63:0)
+; 	xor eax, eax
+; 	stosd				; dword 2 - Interrupter Target (31:22)
+; 	mov eax, 0x00001E21		; TRB Type 7, BEI, IOC, C
+; 	stosd				; dword 3 - TRB Type (15:10), BEI (9), IOC (5), CH (4), ENT (1), Cycle (0)
+
+; 	; Ring the doorbell for current slot
+; 	mov eax, 1			; EPID 1
+; 	xor ecx, ecx
+; 	mov cl, [currentslot]
+; 	call xhci_ring_doorbell_dbg
+
+; 	; Gather result from event ring
+; 	xor eax, eax
+; 	pop rbx				; Restore the token value
+	
+; 	call xhci_check_command_event_dbg
+
+; 	push r9
+; 	push r8
+; 	mov r8, [0x11d000]	
+; 	mov [0x11d008 + 8*r8], rax
+; 	inc r8
+; 	mov qword [0x11d008 + 8*r8], rdi
+; 	inc r8
+; 	mov [0x11d000], r8
+; 	pop r9
+; 	pop r8
+
+; 	; Check CompCode
+; 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+; 	cmp al, 0x01
+; 	jne xhci_enumerate_devices_end
+
+; 	;   G.B. USB read buffer dump 
+; 	push r8
+; 	push r9
+; 	push rdx
+; 	push r10
+; 	mov r8, [0x11d000]
+; 	mov r10, 0xdeadbeefdeadbeef
+; 	mov [0x11d008 + 8*r8], r10
+; 	inc r8	
+; 	xor rdx,rdx
+; uloop:
+; 	mov r10, [os_usb_data0 + rdx*8]	
+; 	mov [0x11d008 + 8*r8], r10
+; 	inc r8	
+; 	inc rdx
+; 	cmp rdx, 0x4
+; 	jl uloop
+
+; 	mov [0x11d000], r8
+; 	pop r8
+; 	pop r9
+; 	pop rdx
+; 	pop r10
+
+	;@@@@@@@@@@@@@@@@@@@@@@@ Set configuration @@@@@@@@@@@@@@@@@@@@@@@
+	; setup TRB
+	; ************ DWORD[0] ************
+	; bmRequestType(7:0)
+	;  .recipient(4:0)       =0 (Device)
+	;  .type_of_request(6:5) =0 (Standard)
+	;  .transfer_direction(7)=0 (Host-to-device)
+	; bRequest(15:8)=0x09 (SET_CONFIGURATION)
+	; wValue(31:16)=0x0001
+	;  [0](23:16)  =0x01
+	;  [1](31:24)  =0x00
+	mov eax, 0x00010900
+	stosd
+	; ************ DWORD[1] ************
+	; wIndex(15:0) =0x0000
+	;  [0](7:0)    =0x00
+	;  [1](15:8)   =0x00
+	; wLength(15:0)=0x0000 : 0d
+	mov eax, 0x00000000
+	stosd
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00008 : 8d
+	; interrupter_target(31:22)=0x000 : 0d
 	mov eax, 0x00000008
-	stosd				; dword 2 - Interrupter Target (31:22), TRB Transfer Length (16:0)
-	mov eax, 0x00030841		; TRT 3, TRB Type 2, IDT, C
-	stosd				; dword 3 - TRT (17:16), TRB Type (15:10), IDT (6), IOC (5), C (0)
-	; Data Stage
-	mov rax, os_usb_data0
-	stosq				; dword 0 & 1 - Data Buffer (63:0)
-	mov eax, 0x00000100		; Request 8 bytes
-	stosd				; dword 2 - Interrupter Target (31:22), TD Size (21:17), TRB Transfer Length (16:0)
-	mov eax, 0x00010C01		; DIR, TRB Type 3, C
-	stosd				; dword 3 - DIR (16), TRB Type (15:10), IDT (6), IOC (5), CH (4), NS (3), ISP (2), ENT (1), C (0)
-	; Status Stage
-	xor eax, eax
-	stosq				; dword 0 & 1 - Reserved Zero
-	stosd				; dword 2 - Interrupter Target (31:22)
-	mov eax, 0x00001013		; TRB Type 4, CH, ENT, C
-	stosd				; dword 3 - DIR (16), TRB Type (15:10), IOC (5), CH (4), ENT (1), C (0)
-	; Event Data
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=2 (Setup Stage (Transfer Ring))
+	; trt(17:16)     =2 Transfer Type (OUT Data Stage)
+	mov eax, 0x00000841
+	stosd
+
+	; status TRB
+	xor rax,rax
+	; ************ DWORD[0] ************
+	; ************ DWORD[1] ************
+	stosq
+	; ************ DWORD[2] ************
+	; interrupter_target(31:22)=0x000 : 0d
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=1 (Evaluate Next TRB)
+	; CH(4) =1 (Chain bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; trb_type(15:10)=4 (Status Stage (Transfer Ring))
+	; DIR(16)=0 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00011013
+	stosd
+
+	; data event TRB
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)
 	add qword [os_usb_evtoken], 1
 	mov rax, [os_usb_evtoken]
 	push rax
-	stosq				; dword 0 & 1 - Data Buffer (63:0)
-	xor eax, eax
-	stosd				; dword 2 - Interrupter Target (31:22)
-	mov eax, 0x00001E21		; TRB Type 7, BEI, IOC, C
-	stosd				; dword 3 - TRB Type (15:10), BEI (9), IOC (5), CH (4), ENT (1), Cycle (0)
+	stosq
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00000 : 0d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x00000000
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=1 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00001E21
+	stosd
 
 	; Ring the doorbell for current slot
 	mov eax, 1			; EPID 1
@@ -1333,46 +1465,110 @@ found_mass_storage:
 	
 	call xhci_check_command_event_dbg
 
-	push r9
-	push r8
-	mov r8, [0x11d000]	
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
-
+	
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
+	;@@@@@@@@@@@@@@@@@@@@@@@ Set configuration end @@@@@@@@@@@@@@@@@@@@@@@
 
-	;   G.B. USB read buffer dump 
-	push r8
-	push r9
-	push rdx
-	push r10
-	mov r8, [0x11d000]
-	mov r10, 0xdeadbeefdeadbeef
-	mov [0x11d008 + 8*r8], r10
-	inc r8	
-	xor rdx,rdx
-uloop:
-	mov r10, [os_usb_data0 + rdx*8]	
-	mov [0x11d008 + 8*r8], r10
-	inc r8	
-	inc rdx
-	cmp rdx, 0x4
-	jl uloop
+	;######################### Set interface #########################
+	 ; setup TRB
+	; ************ DWORD[0] ************
+	; bmRequestType(7:0)
+	;  .recipient(4:0)       =0 (Device)
+	;  .type_of_request(6:5) =0 (Standard)
+	;  .transfer_direction(7)=0 (Host-to-device)
+	; bRequest(15:8)=0x0B (SET_INTERFACE)
+	; wValue(31:16)=0x0000
+	;  [0](23:16)  =0x00
+	;  [1](31:24)  =0x00
+	mov eax, 0x00000B00
+	stosd
+	; ************ DWORD[1] ************
+	; wIndex(15:0) =0x0000
+	;  [0](7:0)    =0x00
+	;  [1](15:8)   =0x00
+	; wLength(15:0)=0x0000 : 0d
+	mov eax, 0x00000000
+	stosd
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00008 : 8d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x00000008
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=2 (Setup Stage (Transfer Ring))
+	; trt(17:16)     =2 Transfer Type (OUT Data Stage)
+	mov eax, 0x00000841
+	stosd
+	; status TRB
+	xor rax,rax
+	; ************ DWORD[0] ************
+	; ************ DWORD[1] ************
+	stosq
+	; ************ DWORD[2] ************
+	; interrupter_target(31:22)=0x000 : 0d
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=1 (Evaluate Next TRB)
+	; CH(4) =1 (Chain bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; trb_type(15:10)=4 (Status Stage (Transfer Ring))
+	; DIR(16)=0 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00011013
+	stosd
 
-	mov [0x11d000], r8
-	pop r8
-	pop r9
-	pop rdx
-	pop r10
+	; data event TRB
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)
+	add qword [os_usb_evtoken], 1
+	mov rax, [os_usb_evtoken]
+	push rax
+	stosq
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00000 : 0d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x00000000
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=1 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00001E21
+	stosd
 
+	; Ring the doorbell for current slot
+	mov eax, 1			; EPID 1
+	xor ecx, ecx
+	mov cl, [currentslot]
+	call xhci_ring_doorbell_dbg
+
+	; Gather result from event ring
+	xor eax, eax
+	pop rbx				; Restore the token value
+	
+	call xhci_check_command_event_dbg
+
+	
+	; Check CompCode
+	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+	cmp al, 0x01
+	jne xhci_enumerate_devices_end
+	;######################### Set interface end #########################
 
 	; ************************************************************************
 	; Configure the input context
@@ -1412,24 +1608,7 @@ uloop:
 	add rdi, rax			; EP2 OUT
 	add rdi, rax			; EP2 IN
 	; Set Endpoint Context 1 IN
-		; G.B
-	push r9
-	push r8
-	mov r8, [0x11d000]
-	mov r9, 0x00AA00AA00AA00AA
-	mov [0x11d008 + 8*r8], r9
-	inc r8	
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov r9, 0x00BB00BB00BB00BB
-	mov qword [0x11d008 + 8*r8], r9
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
-	; G.B
+
 	mov dword [rdi+4], 0x02000036	; Set Max Packet Size (31:16) to 512, EP Type (5:3) to 6 (Bulk IN), CErr (2:1) to 3
 	mov rax, os_usb_TR_EP2_IN		; Address of Transfer Ring
 	bts rax, 0
@@ -1492,20 +1671,6 @@ uloop:
 	pop rbx				; Restore the Address of the Configure Endpoint command
 	call xhci_check_command_event
 
-	push r9
-	push r8
-	mov r8, [0x11d000]	
-	mov r9, 0x0101010102020202
-	mov [0x11d008 + 8*r8], r9
-	inc r8
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
-
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
@@ -1519,7 +1684,7 @@ uloop:
 
 
 	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	; Issue Report LUN SCSI command
+	; Issue Inquiry SCSI command
 	mov rdi, os_usb_data0
 
 	mov eax, 0x43425355
@@ -1530,11 +1695,11 @@ uloop:
 	stosd	
 	mov eax, 0x00000100
 	stosd
-	mov eax, 0xA00C0080
+	mov eax, 0x12060080
 	stosd
-	mov eax, 0x00000200
+	mov eax, 0x01000000
 	stosd
-	mov eax, 0x00010000
+	mov eax, 0x00000000
 	stosd
 	mov eax, 0x00000000
 	stosd
@@ -1551,10 +1716,10 @@ uloop:
 	mov rax, os_usb_data0
 	stosq
 	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x0001B : 27d
+	; trb_transfer_length(16:0)=0x0001F : 31d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x0000001B
+	mov eax, 0x0000001F
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -1608,69 +1773,28 @@ uloop:
 	pop rbx				; Restore the token value
 	
 	call xhci_check_command_event_dbg
-
-	push r9
-	push r8
-	mov r8, [0x11d000]
-	mov r9, 0xFEEDE850FEEDE850
-	mov [0x11d008 + 8*r8], r9
-	inc r8	
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov r9, [0x18f060]
-	mov qword [0x11d008 + 8*r8], r9
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
-
+	
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
 
-		;   G.B. USB read buffer dump 
-	push r8
-	push r9
-	push rdx
-	push r10
-	mov r8, [0x11d000]
-	mov r10, 0x7777777777777777
-	mov [0x11d008 + 8*r8], r10
-	inc r8	
-	xor rdx,rdx
-uloop1:
-	mov r10, [os_usb_data0 + rdx*8]	
-	mov [0x11d008 + 8*r8], r10
-	inc r8	
-	inc rdx
-	cmp rdx, 0x4
-	jl uloop1
-
-	mov [0x11d000], r8
-	pop r8
-	pop r9
-	pop rdx
-	pop r10
-
-	; Get the status for Report LUN SCSI command
+	; To BULK in
 	mov rdi, os_usb_TR_EP2_IN
-	 ; normal TRB
-	; ************ DWORD[0] ************
-	; data_buffer_lo(31:0)=0x00000000
-	; ************ DWORD[1] ************
-	; data_buffer_hi(31:0)=0x00000000
+	; normal TRB
 	mov rax, os_usb_data0
 	add rax, 0x1000
 	stosq
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)=0x00000000
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)=0x00000000	
 	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x0000D : 13d
+	; trb_transfer_length(16:0)=0x00100 : 256d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x0000000D
-	stosd	
+	mov eax, 0x00000100
+	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
 	; ENT(1)=0 (Evaluate Next TRB)
@@ -1683,20 +1807,21 @@ uloop1:
 	; trb_type(15:10)=1 (Normal (Transfer Ring))
 	mov eax, 0x00000401
 	stosd
-	; data event TRB
+
+	 ; data TRB
 	; ************ DWORD[0] ************
 	; data_buffer_lo(31:0)=0x00000000
 	; ************ DWORD[1] ************
-	; data_buffer_hi(31:0)=0x00000000
 	add qword [os_usb_evtoken], 1
 	mov rax, [os_usb_evtoken]
 	push rax
-	stosq	 
+	stosq
+	; data_buffer_hi(31:0)=0x00000000
 	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x0000D : 13d
+	; trb_transfer_length(16:0)=0x00100 : 256d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x0000000D
+	mov eax, 0x00000100
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -1707,19 +1832,16 @@ uloop1:
 	; IOC(5)=1 (Interrupt On Completion)
 	; IDT(6)=1 (Immediate Data)
 	; trb_type(15:10)=7 (Event Data (Transfer Ring))
-	; DIR(16)=0 (Direction; 1 -> 'IN (Read Data)')
-	mov eax, 0x00011C21
+	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00001C21
 	stosd
-	;++++++++++++++++++++++++++++++++++++++++++++++++++
-	 
-	;++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	; Ring the doorbell for current slot
 	mov eax, 5			; EPID 5
 	xor ecx, ecx
 	mov cl, [mass_store_slot]
 	call xhci_ring_doorbell_dbg
-	
+
 	; Gather result from event ring
 	xor eax, eax
 	pop rbx				; Restore the token value
@@ -1729,7 +1851,7 @@ uloop1:
 	push r9
 	push r8
 	mov r8, [0x11d000]
-	mov r9, 0xABADABADABADABAD
+	mov r9, 0x1212121234343434
 	mov [0x11d008 + 8*r8], r9
 	inc r8	
 	mov [0x11d008 + 8*r8], rax
@@ -1747,6 +1869,30 @@ uloop1:
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
+
+		;   G.B. USB read buffer dump 
+	push r8
+	push r9
+	push rdx
+	push r10
+	mov r8, [0x11d000]
+	mov r10, 0xdeadbeefdeadbeef
+	mov [0x11d008 + 8*r8], r10
+	inc r8	
+	xor rdx,rdx
+uloop:
+	mov r10, [os_usb_data0+ 0x1000 + rdx*8]	
+	mov [0x11d008 + 8*r8], r10
+	inc r8	
+	inc rdx
+	cmp rdx, 0x4
+	jl uloop
+
+	mov [0x11d000], r8
+	pop r8
+	pop r9
+	pop rdx
+	pop r10
 	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	jmp xhci_enumerate_devices_end
 
@@ -2200,19 +2346,6 @@ xhci_int1:
 	btr eax, 3			; Clear Event Interrupt (EINT) (bit 3)
 	mov [rdi], eax
 
-	push r9
-	push r8
-	mov r8, [0x11d000]
-	mov r9, 0x8888888899999999
-	mov [0x11d008 + 8*r8], r9
-	inc r8	
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
 
 	; ; Get key press
 	; ; 8-byte packet will be at 0x6e0100
