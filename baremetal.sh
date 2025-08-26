@@ -13,6 +13,9 @@ cmd=( qemu-system-x86_64
 #	-cpu Westmere,x2apic,pdpe1gb
 #	-cpu host -enable-kvm
 
+	#-device nec-usb-xhci,id=xhci
+ 	#-device usb-storage,bus=xhci.0,drive=stick file="sys/baremetal_os.img"
+
 # RAM
 	-m 256 # Value is in Megabytes
 
