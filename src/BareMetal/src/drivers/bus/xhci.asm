@@ -1697,7 +1697,7 @@ found_mass_storage:
 	stosd
 	mov eax, 0x12060080
 	stosd
-	mov eax, 0x01000000
+	mov eax, 0x00010000
 	stosd
 	mov eax, 0x00000000
 	stosd
@@ -1706,8 +1706,10 @@ found_mass_storage:
 	mov eax, 0x00000000
 	stosd
 
-	; Create endpoint TRB for Report LUN request
+	; Create endpoint TRB for SCSI Inquiry
 	mov rdi, os_usb_TR_EP1_OUT
+	add qword [bulk_out_tr_offset], 32
+	
 	; normal TRB
 	; ************ DWORD[0] ************
 	; data_buffer_lo(31:0)=0x00000000
@@ -1781,6 +1783,7 @@ found_mass_storage:
 
 	; To BULK in
 	mov rdi, os_usb_TR_EP2_IN
+	add qword [bulk_in_tr_offset], 32
 	; normal TRB
 	mov rax, os_usb_data0
 	add rax, 0x1000
@@ -1794,6 +1797,180 @@ found_mass_storage:
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
 	mov eax, 0x00000100
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; IDT(6)=0 (Immediate Data)
+	; BEI(9)=0 (Block Event Interrupt)
+	; trb_type(15:10)=1 (Normal (Transfer Ring))
+	mov eax, 0x00000401
+	stosd
+
+	 ; data TRB
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)=0x00000000
+	; ************ DWORD[1] ************
+	add qword [os_usb_evtoken], 1
+	mov rax, [os_usb_evtoken]
+	push rax
+	stosq
+	; data_buffer_hi(31:0)=0x00000000
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00100 : 256d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x00000100
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=1 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00001C21
+	stosd
+
+	; Ring the doorbell for current slot
+	mov eax, 5			; EPID 5
+	xor ecx, ecx
+	mov cl, [mass_store_slot]
+	call xhci_ring_doorbell_dbg
+
+	; Gather result from event ring
+	xor eax, eax
+	pop rbx				; Restore the token value
+	
+	call xhci_check_command_event_dbg
+
+	; Check CompCode
+	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+	cmp al, 0x01
+	jne xhci_enumerate_devices_end
+	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	; ######################### SCSI Read(10) command start #########################
+	mov rdi, os_usb_data0
+
+	mov eax, 0x43425355
+	stosd
+	; transaction unqiue identifier
+	add qword [os_usb_evtoken], 1
+	mov rax, [os_usb_evtoken]
+	stosd		
+	mov eax, 0x00000200
+	stosd
+	mov eax, 0x280A0000
+	stosd
+	mov eax, 0x00000000
+	stosd
+	mov eax, 0x01000000
+	stosd
+	mov eax, 0x00000000
+	stosd
+	mov eax, 0x00000000
+	stosd
+
+	mov rdi, os_usb_TR_EP1_OUT
+	add rdi, qword [bulk_out_tr_offset]
+	add qword [bulk_out_tr_offset], 32
+	
+	; normal TRB
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)=0x00000000
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)=0x00000000
+	mov rax, os_usb_data0
+	stosq
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x0001F : 31d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x0000001F
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=0 (Interrupt On Completion)
+	; IDT(6)=0 (Immediate Data)
+	; BEI(9)=0 (Block Event Interrupt)
+	; trb_type(15:10)=1 (Normal (Transfer Ring))
+	mov eax, 0x00000401
+	stosd
+
+	; data event TRB
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)=0x00000000
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)=0x00000000
+	add qword [os_usb_evtoken], 1
+	mov rax, [os_usb_evtoken]
+	push rax
+	stosq
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x0001F : 31d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x0000001F
+	stosd
+	; ************ DWORD[3] ************
+	; C(0)  =1 (Cycle bit)
+	; ENT(1)=0 (Evaluate Next TRB)
+	; ISP(2)=0 (Interrupt-on Short Packet)
+	; NS(3) =0 (No Snoop)
+	; CH(4) =0 (Chain bit)
+	; IOC(5)=1 (Interrupt On Completion)
+	; IDT(6)=1 (Immediate Data)
+	; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	mov eax, 0x00001C21
+	stosd
+
+	; Ring the doorbell for current slot
+	mov eax, 2			; EPID 2
+	xor ecx, ecx
+	mov cl, [mass_store_slot]
+	call xhci_ring_doorbell_dbg
+
+	; Gather result from event ring
+	xor eax, eax
+	pop rbx				; Restore the token value
+	
+	call xhci_check_command_event_dbg
+		
+	; Check CompCode
+	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+	cmp al, 0x01
+	jne xhci_enumerate_devices_end
+
+	; Bulk in for Read(10)
+	mov rdi, os_usb_TR_EP2_IN
+	add rdi, qword [bulk_in_tr_offset]
+	add qword [bulk_in_tr_offset], 32
+	; normal TRB
+	mov rax, os_usb_data0
+	add rax, 0x1000
+	stosq
+	; ************ DWORD[0] ************
+	; data_buffer_lo(31:0)=0x00000000
+	; ************ DWORD[1] ************
+	; data_buffer_hi(31:0)=0x00000000	
+	; ************ DWORD[2] ************
+	; trb_transfer_length(16:0)=0x00400 : 1024d
+	; td_size(21:17)           =0x00000 : 0d
+	; interrupter_target(31:22)=0x000 : 0d
+	mov eax, 0x00000400
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -1870,7 +2047,7 @@ found_mass_storage:
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
 
-		;   G.B. USB read buffer dump 
+	;   G.B. USB read buffer dump 
 	push r8
 	push r9
 	push rdx
@@ -1881,7 +2058,7 @@ found_mass_storage:
 	inc r8	
 	xor rdx,rdx
 uloop:
-	mov r10, [os_usb_data0+ 0x1000 + rdx*8]	
+	mov r10, [os_usb_data0 + 0x1000 + rdx*8]	
 	mov [0x11d008 + 8*r8], r10
 	inc r8	
 	inc rdx
@@ -1893,7 +2070,7 @@ uloop:
 	pop r9
 	pop rdx
 	pop r10
-	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; ######################### SCSI Read(10) command end #########################
 	jmp xhci_enumerate_devices_end
 
 foundkeyboard:
@@ -2442,6 +2619,8 @@ xhci_op:	dq 0			; Start of Operational Registers
 xhci_db:	dq 0			; Start of Doorbell Registers
 xhci_rt:	dq 0			; Start of Runtime Registers
 xhci_croff:	dq 0
+bulk_out_tr_offset:	dq 0
+bulk_in_tr_offset:	dq 0
 xhci_csz:	dd 32			; Default Context Size
 xhci_portlist:	times 32 db 0x00
 xhci_portcount:	db 0
