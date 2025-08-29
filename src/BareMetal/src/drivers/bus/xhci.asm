@@ -1250,7 +1250,7 @@ xhci_check_command_event_dbg:
 	
 	call os_hpet_us
 	mov rdx, rax
-	add rdx, 500000		; Add 50,000 μs
+	add rdx, 5000000		; Add 50,000 μs
 	mov rsi, os_usb_ERS	; Event segment for Command Ring
 	shl rcx, 12		; Quick multiply by 4096
 	add rsi, rcx	
@@ -1683,183 +1683,182 @@ found_mass_storage:
 	; ************************************************************************
 
 
-	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	; Issue Inquiry SCSI command
-	mov rdi, os_usb_data0
+	; ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; ; Issue Inquiry SCSI command
+	; mov rdi, os_usb_data0
 
-	mov eax, 0x43425355
-	stosd
-	; transaction unqiue identifier
-	add qword [os_usb_evtoken], 1
-	mov rax, [os_usb_evtoken]
-	stosd	
-	mov eax, 0x00000100
-	stosd
-	mov eax, 0x12060080
-	stosd
-	mov eax, 0x00010000
-	stosd
-	mov eax, 0x00000000
-	stosd
-	mov eax, 0x00000000
-	stosd
-	mov eax, 0x00000000
-	stosd
+	; mov eax, 0x43425355
+	; stosd
+	; ; transaction unqiue identifier
+	; add qword [os_usb_evtoken], 1
+	; mov rax, [os_usb_evtoken]
+	; stosd	
+	; mov eax, 0x00000100
+	; stosd
+	; mov eax, 0x12060080
+	; stosd
+	; mov eax, 0x00010000
+	; stosd
+	; mov eax, 0x00000000
+	; stosd
+	; mov eax, 0x00000000
+	; stosd
+	; mov eax, 0x00000000
+	; stosd
 
-	; Create endpoint TRB for SCSI Inquiry
-	mov rdi, os_usb_TR_EP1_OUT
-	add qword [bulk_out_tr_offset], 32
+	; ; Create endpoint TRB for SCSI Inquiry
+	; mov rdi, os_usb_TR_EP1_OUT
+	; add qword [bulk_out_tr_offset], 32
 	
-	; normal TRB
-	; ************ DWORD[0] ************
-	; data_buffer_lo(31:0)=0x00000000
-	; ************ DWORD[1] ************
-	; data_buffer_hi(31:0)=0x00000000
-	mov rax, os_usb_data0
-	stosq
-	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x0001F : 31d
-	; td_size(21:17)           =0x00000 : 0d
-	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x0000001F
-	stosd
-	; ************ DWORD[3] ************
-	; C(0)  =1 (Cycle bit)
-	; ENT(1)=0 (Evaluate Next TRB)
-	; ISP(2)=0 (Interrupt-on Short Packet)
-	; NS(3) =0 (No Snoop)
-	; CH(4) =0 (Chain bit)
-	; IOC(5)=0 (Interrupt On Completion)
-	; IDT(6)=0 (Immediate Data)
-	; BEI(9)=0 (Block Event Interrupt)
-	; trb_type(15:10)=1 (Normal (Transfer Ring))
-	mov eax, 0x00000401
-	stosd
+	; ; normal TRB
+	; ; ************ DWORD[0] ************
+	; ; data_buffer_lo(31:0)=0x00000000
+	; ; ************ DWORD[1] ************
+	; ; data_buffer_hi(31:0)=0x00000000
+	; mov rax, os_usb_data0
+	; stosq
+	; ; ************ DWORD[2] ************
+	; ; trb_transfer_length(16:0)=0x0001F : 31d
+	; ; td_size(21:17)           =0x00000 : 0d
+	; ; interrupter_target(31:22)=0x000 : 0d
+	; mov eax, 0x0000001F
+	; stosd
+	; ; ************ DWORD[3] ************
+	; ; C(0)  =1 (Cycle bit)
+	; ; ENT(1)=0 (Evaluate Next TRB)
+	; ; ISP(2)=0 (Interrupt-on Short Packet)
+	; ; NS(3) =0 (No Snoop)
+	; ; CH(4) =0 (Chain bit)
+	; ; IOC(5)=0 (Interrupt On Completion)
+	; ; IDT(6)=0 (Immediate Data)
+	; ; BEI(9)=0 (Block Event Interrupt)
+	; ; trb_type(15:10)=1 (Normal (Transfer Ring))
+	; mov eax, 0x00000401
+	; stosd
 
-	; data event TRB
-	; ************ DWORD[0] ************
-	; data_buffer_lo(31:0)=0x00000000
-	; ************ DWORD[1] ************
-	; data_buffer_hi(31:0)=0x00000000
-	add qword [os_usb_evtoken], 1
-	mov rax, [os_usb_evtoken]
-	push rax
-	stosq
-	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x0001F : 31d
-	; td_size(21:17)           =0x00000 : 0d
-	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x0000001F
-	stosd
-	; ************ DWORD[3] ************
-	; C(0)  =1 (Cycle bit)
-	; ENT(1)=0 (Evaluate Next TRB)
-	; ISP(2)=0 (Interrupt-on Short Packet)
-	; NS(3) =0 (No Snoop)
-	; CH(4) =0 (Chain bit)
-	; IOC(5)=1 (Interrupt On Completion)
-	; IDT(6)=1 (Immediate Data)
-	; trb_type(15:10)=7 (Event Data (Transfer Ring))
-	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
-	mov eax, 0x00001C21
-	stosd
+	; ; data event TRB
+	; ; ************ DWORD[0] ************
+	; ; data_buffer_lo(31:0)=0x00000000
+	; ; ************ DWORD[1] ************
+	; ; data_buffer_hi(31:0)=0x00000000
+	; add qword [os_usb_evtoken], 1
+	; mov rax, [os_usb_evtoken]
+	; push rax
+	; stosq
+	; ; ************ DWORD[2] ************
+	; ; trb_transfer_length(16:0)=0x0001F : 31d
+	; ; td_size(21:17)           =0x00000 : 0d
+	; ; interrupter_target(31:22)=0x000 : 0d
+	; mov eax, 0x0000001F
+	; stosd
+	; ; ************ DWORD[3] ************
+	; ; C(0)  =1 (Cycle bit)
+	; ; ENT(1)=0 (Evaluate Next TRB)
+	; ; ISP(2)=0 (Interrupt-on Short Packet)
+	; ; NS(3) =0 (No Snoop)
+	; ; CH(4) =0 (Chain bit)
+	; ; IOC(5)=1 (Interrupt On Completion)
+	; ; IDT(6)=1 (Immediate Data)
+	; ; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; ; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	; mov eax, 0x00001C21
+	; stosd
 
-	; Ring the doorbell for current slot
-	mov eax, 2			; EPID 2
-	xor ecx, ecx
-	mov cl, [mass_store_slot]
-	call xhci_ring_doorbell_dbg
+	; ; Ring the doorbell for current slot
+	; mov eax, 2			; EPID 2
+	; xor ecx, ecx
+	; mov cl, [mass_store_slot]
+	; call xhci_ring_doorbell_dbg
 
-	; Gather result from event ring
-	xor eax, eax
-	pop rbx				; Restore the token value
+	; ; Gather result from event ring
+	; xor eax, eax
+	; pop rbx				; Restore the token value
 	
-	call xhci_check_command_event_dbg
+	; call xhci_check_command_event_dbg
 	
-	; Check CompCode
-	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
-	cmp al, 0x01
-	jne xhci_enumerate_devices_end
+	; ; Check CompCode
+	; ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+	; cmp al, 0x01
+	; jne xhci_enumerate_devices_end
 
-	; To BULK in
-	mov rdi, os_usb_TR_EP2_IN
-	add qword [bulk_in_tr_offset], 32
-	; normal TRB
-	mov rax, os_usb_data0
-	add rax, 0x1000
-	stosq
-	; ************ DWORD[0] ************
-	; data_buffer_lo(31:0)=0x00000000
-	; ************ DWORD[1] ************
-	; data_buffer_hi(31:0)=0x00000000	
-	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x00100 : 256d
-	; td_size(21:17)           =0x00000 : 0d
-	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x00000100
-	stosd
-	; ************ DWORD[3] ************
-	; C(0)  =1 (Cycle bit)
-	; ENT(1)=0 (Evaluate Next TRB)
-	; ISP(2)=0 (Interrupt-on Short Packet)
-	; NS(3) =0 (No Snoop)
-	; CH(4) =0 (Chain bit)
-	; IOC(5)=0 (Interrupt On Completion)
-	; IDT(6)=0 (Immediate Data)
-	; BEI(9)=0 (Block Event Interrupt)
-	; trb_type(15:10)=1 (Normal (Transfer Ring))
-	mov eax, 0x00000401
-	stosd
+	; ; To BULK in
+	; mov rdi, os_usb_TR_EP2_IN
+	; add qword [bulk_in_tr_offset], 32
+	; ; normal TRB
+	; mov rax, os_usb_data0
+	; add rax, 0x1000
+	; stosq
+	; ; ************ DWORD[0] ************
+	; ; data_buffer_lo(31:0)=0x00000000
+	; ; ************ DWORD[1] ************
+	; ; data_buffer_hi(31:0)=0x00000000	
+	; ; ************ DWORD[2] ************
+	; ; trb_transfer_length(16:0)=0x00100 : 256d
+	; ; td_size(21:17)           =0x00000 : 0d
+	; ; interrupter_target(31:22)=0x000 : 0d
+	; mov eax, 0x00000100
+	; stosd
+	; ; ************ DWORD[3] ************
+	; ; C(0)  =1 (Cycle bit)
+	; ; ENT(1)=0 (Evaluate Next TRB)
+	; ; ISP(2)=0 (Interrupt-on Short Packet)
+	; ; NS(3) =0 (No Snoop)
+	; ; CH(4) =0 (Chain bit)
+	; ; IOC(5)=0 (Interrupt On Completion)
+	; ; IDT(6)=0 (Immediate Data)
+	; ; BEI(9)=0 (Block Event Interrupt)
+	; ; trb_type(15:10)=1 (Normal (Transfer Ring))
+	; mov eax, 0x00000401
+	; stosd
 
-	 ; data TRB
-	; ************ DWORD[0] ************
-	; data_buffer_lo(31:0)=0x00000000
-	; ************ DWORD[1] ************
-	add qword [os_usb_evtoken], 1
-	mov rax, [os_usb_evtoken]
-	push rax
-	stosq
-	; data_buffer_hi(31:0)=0x00000000
-	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x00100 : 256d
-	; td_size(21:17)           =0x00000 : 0d
-	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x00000100
-	stosd
-	; ************ DWORD[3] ************
-	; C(0)  =1 (Cycle bit)
-	; ENT(1)=0 (Evaluate Next TRB)
-	; ISP(2)=0 (Interrupt-on Short Packet)
-	; NS(3) =0 (No Snoop)
-	; CH(4) =0 (Chain bit)
-	; IOC(5)=1 (Interrupt On Completion)
-	; IDT(6)=1 (Immediate Data)
-	; trb_type(15:10)=7 (Event Data (Transfer Ring))
-	; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
-	mov eax, 0x00001C21
-	stosd
+	;  ; data TRB
+	; ; ************ DWORD[0] ************
+	; ; data_buffer_lo(31:0)=0x00000000
+	; ; ************ DWORD[1] ************
+	; add qword [os_usb_evtoken], 1
+	; mov rax, [os_usb_evtoken]
+	; push rax
+	; stosq
+	; ; data_buffer_hi(31:0)=0x00000000
+	; ; ************ DWORD[2] ************
+	; ; trb_transfer_length(16:0)=0x00100 : 256d
+	; ; td_size(21:17)           =0x00000 : 0d
+	; ; interrupter_target(31:22)=0x000 : 0d
+	; mov eax, 0x00000100
+	; stosd
+	; ; ************ DWORD[3] ************
+	; ; C(0)  =1 (Cycle bit)
+	; ; ENT(1)=0 (Evaluate Next TRB)
+	; ; ISP(2)=0 (Interrupt-on Short Packet)
+	; ; NS(3) =0 (No Snoop)
+	; ; CH(4) =0 (Chain bit)
+	; ; IOC(5)=1 (Interrupt On Completion)
+	; ; IDT(6)=1 (Immediate Data)
+	; ; trb_type(15:10)=7 (Event Data (Transfer Ring))
+	; ; DIR(16)=1 (Direction; 1 -> 'IN (Read Data)')
+	; mov eax, 0x00001C21
+	; stosd
 
-	; Ring the doorbell for current slot
-	mov eax, 5			; EPID 5
-	xor ecx, ecx
-	mov cl, [mass_store_slot]
-	call xhci_ring_doorbell_dbg
+	; ; Ring the doorbell for current slot
+	; mov eax, 5			; EPID 5
+	; xor ecx, ecx
+	; mov cl, [mass_store_slot]
+	; call xhci_ring_doorbell_dbg
 
-	; Gather result from event ring
-	xor eax, eax
-	pop rbx				; Restore the token value
+	; ; Gather result from event ring
+	; xor eax, eax
+	; pop rbx				; Restore the token value
 	
-	call xhci_check_command_event_dbg
+	; call xhci_check_command_event_dbg
 
-	; Check CompCode
-	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
-	cmp al, 0x01
-	jne xhci_enumerate_devices_end
-	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; ; Check CompCode
+	; ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
+	; cmp al, 0x01
+	; jne xhci_enumerate_devices_end
+	; ; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	; ######################### SCSI Read(10) command start #########################
-	mov rdi, os_usb_data0
-
+	mov rdi, os_usb_data0	
 	mov eax, 0x43425355
 	stosd
 	; transaction unqiue identifier
@@ -1868,7 +1867,7 @@ found_mass_storage:
 	stosd		
 	mov eax, 0x00000200
 	stosd
-	mov eax, 0x280A0000
+	mov eax, 0x280A0080
 	stosd
 	mov eax, 0x00000000
 	stosd
@@ -1888,7 +1887,7 @@ found_mass_storage:
 	; data_buffer_lo(31:0)=0x00000000
 	; ************ DWORD[1] ************
 	; data_buffer_hi(31:0)=0x00000000
-	mov rax, os_usb_data0
+	mov rax, os_usb_data0	
 	stosq
 	; ************ DWORD[2] ************
 	; trb_transfer_length(16:0)=0x0001F : 31d
@@ -1960,7 +1959,7 @@ found_mass_storage:
 	add qword [bulk_in_tr_offset], 32
 	; normal TRB
 	mov rax, os_usb_data0
-	add rax, 0x1000
+	add rax, 0x2000
 	stosq
 	; ************ DWORD[0] ************
 	; data_buffer_lo(31:0)=0x00000000
@@ -1970,7 +1969,7 @@ found_mass_storage:
 	; trb_transfer_length(16:0)=0x00400 : 1024d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x00000400
+	mov eax, 0x00000200
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -1995,10 +1994,10 @@ found_mass_storage:
 	stosq
 	; data_buffer_hi(31:0)=0x00000000
 	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x00100 : 256d
+	; trb_transfer_length(16:0)=0x00200 : 512d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x00000100
+	mov eax, 0x00000200
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -2058,7 +2057,10 @@ found_mass_storage:
 	inc r8	
 	xor rdx,rdx
 uloop:
-	mov r10, [os_usb_data0 + 0x1000 + rdx*8]	
+	mov r9, os_usb_data0
+	add r9, 0x2000
+	mov r10, [r9 + rdx*8]	
+	
 	mov [0x11d008 + 8*r8], r10
 	inc r8	
 	inc rdx
