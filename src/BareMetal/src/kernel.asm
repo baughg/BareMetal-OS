@@ -90,6 +90,11 @@ dump_loop:
 	add rcx, 8
 	cmp rdx, 0x20
 	jl dump_loop
+	mov rax, 0x1001200230034004
+	call os_debug_dump_rax
+	call os_debug_newline
+	mov rax, [os_xhci_int0_count]
+	call os_debug_dump_rax
 	pop rax
 	pop rdx
 	pop rcx
