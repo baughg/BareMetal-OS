@@ -1243,7 +1243,8 @@ send_null_terminator:
 	add rdi, qword [bulk_in_tr_offset]
 	add qword [bulk_in_tr_offset], 32
 	; normal TRB
-	xor rax, rax
+	mov rax, os_usb_data0
+	add rax, 0x1400
 	stosq
 	; ************ DWORD[0] ************
 	; data_buffer_lo(31:0)=0x00000000
