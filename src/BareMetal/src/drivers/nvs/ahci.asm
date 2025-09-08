@@ -258,7 +258,7 @@ ahci_io_prep_good_drive_id:
 	mov rsi, [os_AHCI_Base]
 	push rdx
 	shl rdx, 7			; Quick multiply by 0x80
-	add rdx, 0x100			; Offset to port 0
+	add rdx, 0x100			; Offset to port 0	
 	add rsi, rdx
 	pop rdx
 

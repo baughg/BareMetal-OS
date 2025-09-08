@@ -73,45 +73,34 @@ start:
 ; 	pop rdx
 ; 	pop rcx
 
-; 64b dump
-	push rax
-	push rdx
-	push rcx
-	xor rcx,rcx
-	;mov ecx, 0xc0058000
-	mov rcx, 0x11d000
-	; rcx, 0x170000
-	xor rdx,rdx
-dump_loop:
-	mov rax, [rcx]
-	call os_debug_dump_rax
-	call os_debug_newline
-	inc rdx
-	add rcx, 8
-	cmp rdx, 0x20
-	jl dump_loop
-	mov rax, 0x1001200230034004
-	call os_debug_dump_rax
-	call os_debug_newline
-	mov rax, [os_xhci_int0_count]
-	call os_debug_dump_rax
-	pop rax
-	pop rdx
-	pop rcx
-; push rax
-; push rdx
-; ;mov edx, 0x580000			; Register 2 for Class code/Subclass/Prog IF/Revision ID
-; ;call os_pcie_read
-; mov edx, 0xc0058000
-; mov eax, [edx]
-; call os_debug_dump_rax
-; mov rax,rdx
-; call os_debug_newline
-; call os_debug_dump_rax
-; pop rax
-; pop rdx
-pause_loop:
-	jmp pause_loop
+; ; ; 64b dump for USB debug
+; ; 	push rax
+; ; 	push rdx
+; ; 	push rcx
+; ; 	xor rcx,rcx
+; ; 	;mov ecx, 0xc0058000
+; ; 	mov rcx, 0x11d000
+; ; 	; rcx, 0x170000
+; ; 	xor rdx,rdx
+; ; dump_loop:
+; ; 	mov rax, [rcx]
+; ; 	call os_debug_dump_rax
+; ; 	call os_debug_newline
+; ; 	inc rdx
+; ; 	add rcx, 8
+; ; 	cmp rdx, 0x20
+; ; 	jl dump_loop
+; ; 	mov rax, 0x1001200230034004
+; ; 	call os_debug_dump_rax
+; ; 	call os_debug_newline
+; ; 	mov rax, [os_xhci_int0_count]
+; ; 	call os_debug_dump_rax
+; ; 	pop rax
+; ; 	pop rdx
+; ; 	pop rcx
+
+; ; pause_loop:
+; ; 	jmp pause_loop
 
 	; Set the payload to run
 	mov dword [0x589c], os_debug_dump_rax
