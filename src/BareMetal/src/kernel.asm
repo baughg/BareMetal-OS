@@ -73,37 +73,37 @@ start:
 ; 	pop rdx
 ; 	pop rcx
 
-; 64b dump for USB debug
-	push rax
-	push rdx
-	push rcx
-	xor rcx,rcx
-	;mov ecx, 0xc0058000
-	mov rcx, 0x11d000
-	; rcx, 0x170000
-	xor rdx,rdx
-dump_loop:
-	mov rax, [rcx]
-	call os_debug_dump_rax
-	call os_debug_newline
-	inc rdx
-	add rcx, 8
-	cmp rdx, 0x40
-	jl dump_loop
-	mov rax, 0x1001200230034004
-	call os_debug_dump_rax
-	call os_debug_newline
-	mov rax, [os_xhci_int0_count]
-	call os_debug_dump_rax
-	pop rax
-	pop rdx
-	pop rcx
+; ; 64b dump for USB debug
+; 	push rax
+; 	push rdx
+; 	push rcx
+; 	xor rcx,rcx
+; 	;mov ecx, 0xc0058000
+; 	mov rcx, 0x11d000
+; 	; rcx, 0x170000
+; 	xor rdx,rdx
+; dump_loop:
+; 	mov rax, [rcx]
+; 	call os_debug_dump_rax
+; 	call os_debug_newline
+; 	inc rdx
+; 	add rcx, 8
+; 	cmp rdx, 0x40
+; 	jl dump_loop
+; 	mov rax, 0x1001200230034004
+; 	call os_debug_dump_rax
+; 	call os_debug_newline
+; 	mov rax, [0x1100b0]
+; 	call os_debug_dump_rax
+; 	pop rax
+; 	pop rdx
+; 	pop rcx
 
-pause_loop:
-	jmp pause_loop
+; pause_loop:
+; 	jmp pause_loop
 
 	; Set the payload to run
-	mov dword [0x589c], os_debug_dump_rax
+	;mov dword [0x589c], os_debug_dump_rax
 start_payload:
 	cmp byte [os_payload], 0
 	je ap_clear			; If no payload was present then skip to ap_clear

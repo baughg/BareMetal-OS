@@ -1718,9 +1718,14 @@ found_mass_storage:
 	ror rax, 32			; Rotate RAX right by 32 bits to put Slot ID in AL
 	mov al, [currentslot]
 	mov [mass_store_slot], al
-	mov rax, 0x40002
+	;mov rax, 0x40002
+	mov rdi, os_nvs_io
+	mov rax, xhci_io
+	stosq
+	mov rax, 0
 	mov rdi, os_usb_data0
 	add rdi, 0x2000
+	mov rcx, 1
 	call xhci_io
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
@@ -1953,9 +1958,13 @@ xhci_io:
 	push r11
 	push r12
 	push r13
+	push r15
 	xor r13, r13
 	mov r11, rdi
-	mov r12, rax
+	shl rax, 3
+	mov r12, rax	
+	mov r15, rcx
+num_sector_loop:
 	call usb_read10_scsi ; iteration 1
 usb_read10_scsi_loop:
 	inc r12
@@ -1966,7 +1975,15 @@ usb_read10_scsi_loop:
 	inc r13
 	cmp r13, 0x7
 	jl usb_read10_scsi_loop
-	
+	inc r12
+	add r11, 512
+	mov rax, r12
+	mov rdi, r11
+	dec r15
+	cmp r15, 0
+	jg num_sector_loop
+
+	pop r15
 	pop r13
 	pop r12
 	pop r11
@@ -2092,6 +2109,7 @@ usb_read10_scsi:
 	add qword [bulk_in_tr_offset], 32
 	; normal TRB
 	pop rax ; get output pointer from rdi input
+	mov r14, rax
 	 ;mov rax, os_usb_data0
 	 ;add rax, 0x2000
 	stosq
@@ -2191,21 +2209,21 @@ usb_read10_scsi:
 	inc r8	
 	xor rdx,rdx
 uloop:
-	mov r9, os_usb_data0
-	add r9, 0x2000
-	mov r10, [r9 + rdx*8]	
+	;mov r9, os_usb_data0
+	;add r9, 0x2000
+	mov r10, [r14 + rdx*8]	
 	
 	mov [0x11d008 + 8*r8], r10
 	inc r8	
 	inc rdx
-	cmp rdx, 0x8
+	cmp rdx, 0x2
 	jl uloop
 
 	mov [0x11d000], r8
-	pop r8
-	pop r9
-	pop rdx
 	pop r10
+	pop rdx
+	pop r9
+	pop r8
 	call send_null_terminator
 read10_scsi_end:    	
 	ret	
