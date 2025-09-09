@@ -1718,6 +1718,9 @@ found_mass_storage:
 	ror rax, 32			; Rotate RAX right by 32 bits to put Slot ID in AL
 	mov al, [currentslot]
 	mov [mass_store_slot], al
+	mov rax, 0x40002
+	mov rdi, os_usb_data0
+	add rdi, 0x2000
 	call usb_read10_scsi
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
@@ -1936,7 +1939,18 @@ uloop1:
 	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	ret
 
+; -----------------------------------------------------------------------------
+; xhci_io -- Perform an I/O operation on an xHCI device
+; IN:	RAX = starting sector # (48-bit LBA address)
+;	RBX = I/O Opcode
+;	RCX = number of sectors
+;	RDX = drive #
+;	RDI = memory location used for reading/writing data from/to device
+; OUT:	Nothing
+;	All other registers preserved
 usb_read10_scsi:
+    push rdi
+	push rax
 	; ######################### SCSI Read(10) command start #########################
 	mov rdi, os_usb_data0
 	add rdi, 0x100	
@@ -1950,9 +1964,13 @@ usb_read10_scsi:
 	stosd
 	mov eax, 0x280A0080
 	stosd
-	mov eax, 0x00000000
+	;  2-5 | Logical Block Address (LBA, big-endian, 32-bit)
+	pop rax	
+	bswap eax	
+	shl rax, 8	
 	stosd
-	mov eax, 0x01000000
+	shr rax, 32
+	or eax, 0x01000000	
 	stosd
 	mov eax, 0x00000000
 	stosd
@@ -2033,25 +2051,27 @@ usb_read10_scsi:
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
-	jne xhci_enumerate_devices_end
+	jne read10_scsi_end
+	;jne xhci_enumerate_devices_end
 
 	; Bulk in for Read(10)
 	mov rdi, os_usb_TR_EP2_IN
 	add rdi, qword [bulk_in_tr_offset]
 	add qword [bulk_in_tr_offset], 32
 	; normal TRB
-	mov rax, os_usb_data0
-	add rax, 0x2000
+	pop rax ; get output pointer from rdi input
+	 ;mov rax, os_usb_data0
+	 ;add rax, 0x2000
 	stosq
 	; ************ DWORD[0] ************
 	; data_buffer_lo(31:0)=0x00000000
 	; ************ DWORD[1] ************
 	; data_buffer_hi(31:0)=0x00000000	
 	; ************ DWORD[2] ************
-	; trb_transfer_length(16:0)=0x00400 : 1024d
+	; trb_transfer_length(16:0)=0x01000 : 512d
 	; td_size(21:17)           =0x00000 : 0d
 	; interrupter_target(31:22)=0x000 : 0d
-	mov eax, 0x00000200
+	mov eax, 0x0000200
 	stosd
 	; ************ DWORD[3] ************
 	; C(0)  =1 (Cycle bit)
@@ -2126,7 +2146,7 @@ usb_read10_scsi:
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
 	cmp al, 0x01
-	jne xhci_enumerate_devices_end
+	jne read10_scsi_end
 
 	;   G.B. USB read buffer dump 
 	push r8
@@ -2154,7 +2174,8 @@ uloop:
 	pop r9
 	pop rdx
 	pop r10
-	call send_null_terminator	
+	call send_null_terminator
+read10_scsi_end:    	
 	ret	
 	; ######################### SCSI Read(10) command end #########################
 	
