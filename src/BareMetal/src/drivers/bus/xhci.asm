@@ -1950,26 +1950,26 @@ uloop1:
 ; OUT:	Nothing
 ;	All other registers preserved
 xhci_io:
-	push r8
-	push r9
-	push r10
-	xor r10, r10
-	mov r8, rdi
-	mov r9, rax
+	push r11
+	push r12
+	push r13
+	xor r13, r13
+	mov r11, rdi
+	mov r12, rax
 	call usb_read10_scsi ; iteration 1
 usb_read10_scsi_loop:
-	inc r9
-	add r8, 512
-	mov rax, r9
-	mov rdi, r8
+	inc r12
+	add r11, 512
+	mov rax, r12
+	mov rdi, r11
 	call usb_read10_scsi ; iteration 2-8
-	inc r10
-	cmp r10, 0x7
+	inc r13
+	cmp r13, 0x7
 	jl usb_read10_scsi_loop
 	
-	pop r10
-	pop r9
-	pop r8
+	pop r13
+	pop r12
+	pop r11
 	ret
 ; -----------------------------------------------------------------------------
 ; usb_read10_scsi -- Perform an I/O operation on an xHCI device
