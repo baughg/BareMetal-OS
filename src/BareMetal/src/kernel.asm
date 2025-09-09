@@ -88,7 +88,7 @@ dump_loop:
 	call os_debug_newline
 	inc rdx
 	add rcx, 8
-	cmp rdx, 0x20
+	cmp rdx, 0x40
 	jl dump_loop
 	mov rax, 0x1001200230034004
 	call os_debug_dump_rax

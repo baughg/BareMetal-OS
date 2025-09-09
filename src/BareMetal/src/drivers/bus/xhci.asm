@@ -1309,18 +1309,18 @@ send_null_terminator:
 	
 	call xhci_check_command_event
 
-	;   G.B. USB read buffer dump 
-	push r8	
-	push r10
-	mov r8, [0x11d000]
-	mov r10, 0xA7A7A7A7A7A7A7A7
-	mov [0x11d008 + 8*r8], r10
-	inc r8
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov [0x11d000], r8
-	pop r8
-	pop r10
+	; ;   G.B. USB read buffer dump 
+	; push r8	
+	; push r10
+	; mov r8, [0x11d000]
+	; mov r10, 0xA7A7A7A7A7A7A7A7
+	; mov [0x11d008 + 8*r8], r10
+	; inc r8
+	; mov [0x11d008 + 8*r8], rax
+	; inc r8
+	; mov [0x11d000], r8
+	; pop r8
+	; pop r10
 
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL		
@@ -1721,7 +1721,7 @@ found_mass_storage:
 	mov rax, 0x40002
 	mov rdi, os_usb_data0
 	add rdi, 0x2000
-	call usb_read10_scsi
+	call xhci_io
 	cmp al, 0x01
 	jne xhci_enumerate_devices_end
 	call usb_inquiry_scsi
@@ -1939,8 +1939,40 @@ uloop1:
 	; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	ret
 
+
 ; -----------------------------------------------------------------------------
 ; xhci_io -- Perform an I/O operation on an xHCI device
+; IN:	RAX = starting sector # (48-bit LBA address)
+;	RBX = I/O Opcode
+;	RCX = number of sectors
+;	RDX = drive #
+;	RDI = memory location used for reading/writing data from/to device
+; OUT:	Nothing
+;	All other registers preserved
+xhci_io:
+	push r8
+	push r9
+	push r10
+	xor r10, r10
+	mov r8, rdi
+	mov r9, rax
+	call usb_read10_scsi ; iteration 1
+usb_read10_scsi_loop:
+	inc r9
+	add r8, 512
+	mov rax, r9
+	mov rdi, r8
+	call usb_read10_scsi ; iteration 2-8
+	inc r10
+	cmp r10, 0x7
+	jl usb_read10_scsi_loop
+	
+	pop r10
+	pop r9
+	pop r8
+	ret
+; -----------------------------------------------------------------------------
+; usb_read10_scsi -- Perform an I/O operation on an xHCI device
 ; IN:	RAX = starting sector # (48-bit LBA address)
 ;	RBX = I/O Opcode
 ;	RCX = number of sectors
@@ -2126,22 +2158,22 @@ usb_read10_scsi:
 	
 	call xhci_check_command_event
 
-	push r9
-	push r8
-	mov r8, [0x11d000]
-	mov r9, 0x1212121234343434
-	mov [0x11d008 + 8*r8], r9
-	inc r8	
-	mov [0x11d008 + 8*r8], rax
-	inc r8
-	mov qword [0x11d008 + 8*r8], rdi
-	inc r8
-	mov r9, [0x18f0C0]
-	mov qword [0x11d008 + 8*r8], r9
-	inc r8
-	mov [0x11d000], r8
-	pop r9
-	pop r8
+	; push r9
+	; push r8
+	; mov r8, [0x11d000]
+	; mov r9, 0x1212121234343434
+	; mov [0x11d008 + 8*r8], r9
+	; inc r8	
+	; mov [0x11d008 + 8*r8], rax
+	; inc r8
+	; mov qword [0x11d008 + 8*r8], rdi
+	; inc r8
+	; mov r9, [0x18f0C0]
+	; mov qword [0x11d008 + 8*r8], r9
+	; inc r8
+	; mov [0x11d000], r8
+	; pop r9
+	; pop r8
 
 	; Check CompCode
 	ror rax, 24			; Rotate RAX right by 24 bits to put CompCode in AL
