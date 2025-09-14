@@ -28,7 +28,7 @@
 
 ; -----------------------------------------------------------------------------
 init_bus:
-	mov qword [0x11c000], 0 ; G.B.
+	;mov qword [0x11c000], 0 ; G.B.
 	mov qword [0x11d000], 0 ; G.B.
 	mov rdi, bus_table		; Address of Bus Table in memory
 	xor edx, edx			; Register 0 for Device ID/Vendor ID	
@@ -57,14 +57,14 @@ init_bus_pcie_probe_found:
 	add edx, 2			; Register 2 for Class code/Subclass/Prog IF/Revision ID
 	call os_pcie_read
 	shr eax, 16			; Move the Class/Subclass code to AX
-	; debug
-	push rcx
-	mov ecx, [0x11c000]
-	mov [0x11c008 + 8*ecx], rax
-	inc ecx
-	mov [0x11c000], ecx
-	pop rcx
-	; debug
+	; ; debug
+	; push rcx
+	; mov ecx, [0x11c000]
+	; mov [0x11c008 + 8*ecx], rax
+	; inc ecx
+	; mov [0x11c000], ecx
+	; pop rcx
+	; ; debug
 	stosd				; Store it to the Bus Table
 	sub edx, 2
 	xor eax, eax			; Pad the Bus Table to 16 bytes

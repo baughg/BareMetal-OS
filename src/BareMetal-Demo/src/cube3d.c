@@ -76,6 +76,7 @@ int main(void)
 {
 	x_res = *(uint16_t *)(0x5088);
 	y_res = *(uint16_t *)(0x508A);
+	
 	unsigned char key = 0;
 	debug_print("Resolution %d x", &x_res);
 	debug_print(" %d \n", &y_res);

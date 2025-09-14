@@ -406,7 +406,7 @@ load_bmfs:
 	mov rcx, 1
 	mov rdx, 0
 	call [b_nvs_read]
-	; offset to file number, starting sector, and file size
+	; offset to file number, starting sector, and file size	
 	pop rcx				; Restore the file #
 	shl rcx, 6
 	add rdi, rcx			; RDI points to start of BMFS entry
@@ -426,7 +426,19 @@ load_bmfs:
 	add rcx, 4095			; Add 1-byte less of a full sector amount
 	shr rcx, 12			; Quick divide by 4096
 	mov rdx, 0
-	call [b_nvs_read]
+
+; 	call [0x58a4]
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
+; 	mov rax, rdi
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
+; 	mov rax, rcx
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
+; load_pause:
+; 	jmp load_pause
+	call [b_nvs_read]	
 	jmp poll
 
 load_notfound:

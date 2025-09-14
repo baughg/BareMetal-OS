@@ -103,7 +103,8 @@ start:
 ; 	jmp pause_loop
 
 	; Set the payload to run
-	;mov dword [0x589c], os_debug_dump_rax
+	mov dword [0x589c], os_debug_dump_rax
+	mov dword [0x58a4], os_debug_newline
 start_payload:
 	cmp byte [os_payload], 0
 	je ap_clear			; If no payload was present then skip to ap_clear
