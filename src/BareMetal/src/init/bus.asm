@@ -28,7 +28,7 @@
 
 ; -----------------------------------------------------------------------------
 init_bus:
-	;mov qword [0x11c000], 0 ; G.B.
+	mov qword [0x11c000], 0 ; G.B.
 	mov qword [0x11d000], 0 ; G.B.
 	mov rdi, bus_table		; Address of Bus Table in memory
 	xor edx, edx			; Register 0 for Device ID/Vendor ID	

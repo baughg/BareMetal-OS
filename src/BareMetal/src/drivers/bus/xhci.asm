@@ -2042,6 +2042,7 @@ usb_read10_scsi_loop:
 	add r11, 512
 	mov rax, r12
 	mov rdi, r11
+	xor r13, r13
 	dec r15
 	cmp r15, 0
 	jg num_sector_loop
@@ -2053,6 +2054,7 @@ usb_read10_scsi_loop:
 	ret
 
 get_ep2_slot:
+	add qword [0x11c000], 1
 	mov rdi, os_usb_TR_EP2_IN
 	add rdi, qword [bulk_in_tr_offset]
 	add qword [bulk_in_tr_offset], 32
@@ -2075,6 +2077,7 @@ get_ep2_slot_done:
 ; OUT:	Nothing
 ;	All other registers preserved
 usb_read10_scsi:
+	mov [0x11c008], rax
     push rdi
 	push rax
 	; ######################### SCSI Read(10) command start #########################

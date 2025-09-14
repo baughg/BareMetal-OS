@@ -98,7 +98,11 @@ start:
 ; 	pop rax
 ; 	pop rdx
 ; 	pop rcx
-
+; 	mov rax, qword [0x11c000]
+; 	call os_debug_dump_rax
+; 	call os_debug_newline
+; 	mov rax, qword [0x11c008]
+; 	call os_debug_dump_rax
 ; pause_loop:
 ; 	jmp pause_loop
 
