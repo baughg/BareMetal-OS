@@ -1774,10 +1774,10 @@ found_mass_storage:
 	mov rdi, 0x11d000
 	add rdi, 0x3000
 	;mov rdi, 0xffffB00000000000
-	mov rcx, 6
-	call xhci_io
-	cmp al, 0x01
-	jne xhci_enumerate_devices_end
+	mov rcx, 1
+	; call xhci_io
+	; cmp al, 0x01
+	; jne xhci_enumerate_devices_end
 	; call usb_inquiry_scsi
 	; cmp al, 0x01
 	; jne xhci_enumerate_devices_end

@@ -427,6 +427,8 @@ load_bmfs:
 	shr rcx, 12			; Quick divide by 4096
 	mov rdx, 0
 
+
+	call [b_nvs_read]	
 ; 	call [0x58a4]
 ; 	call [0x589c] ; dump_rax
 ; 	call [0x58a4] ; newline
@@ -438,7 +440,6 @@ load_bmfs:
 ; 	call [0x58a4] ; newline
 ; load_pause:
 ; 	jmp load_pause
-	call [b_nvs_read]	
 	jmp poll
 
 load_notfound:

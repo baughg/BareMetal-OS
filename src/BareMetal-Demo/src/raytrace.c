@@ -227,7 +227,7 @@ void cls()
 		frame_buffer[bytes] = pixel;
 }
 
-int main() {
+int main() {	
 	frame_buffer = (u8 *)b_system(SCREEN_LFB_GET, 0, 0); // Frame buffer address from kernel
 	cpu_table = (u8 *)0x5100;
 	X = b_system(SCREEN_X_GET, 0, 0); // Screen X
@@ -237,14 +237,14 @@ int main() {
 	int busy;
 
 	b_output("raytrace - First run will be using 1 CPU core\nPress any key to continue", 71);
-
+	
 	c = 0;
 	do {
 		c = b_input();
 	} while (c == 0);
 
 	cls();
-
+	
 	TOTALCORES = 1;
 	render();
 
