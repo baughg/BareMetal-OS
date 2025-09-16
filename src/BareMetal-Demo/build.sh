@@ -20,10 +20,10 @@ if [ "$(uname)" != "Darwin" ]; then
 	gcc $CFLAGS -o uitestc.o uitestc.c
 	ld -T c.ld -o ../bin/uitestc.app crt0.o uitestc.o libBareMetal.o
 	gcc $CFLAGS $CFLAGS_RAY -o raytrace.o raytrace.c
-	#gcc $CFLAGS $CFLAGS_RAY -o main.o main.c
+	gcc $CFLAGS -o npu.o npu.c
 	#gcc $CFLAGS -o raytrace.o raytrace.c
 	ld -T c.ld -o ../bin/raytrace.app crt0.o raytrace.o libBareMetal.o -M > raytrace.txt
-	#ld -T c.ld -o ../bin/raytrace.app crt0.o main.o libBareMetal.o -M > raytrace.txt
+	ld -T c.ld -o ../bin/npuinf.app crt0.o npu.o libBareMetal.o
 	gcc $CFLAGS -o gavare.o gavare.c
 	ld -T c.ld -o ../bin/gavare.app crt0.o gavare.o libBareMetal.o
 	gcc $CFLAGS -o minIP.o minIP.c

@@ -332,6 +332,8 @@ dir_skipramfs:
 	je noFS
 
 dir_bmfs:
+	mov rsi, newline
+	call ui_output
 	mov rsi, dirmsgbmfs
 	call ui_output
 	mov rsi, dirmsg
