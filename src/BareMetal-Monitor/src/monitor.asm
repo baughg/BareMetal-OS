@@ -428,7 +428,9 @@ load_bmfs:
 	mov rdx, 0
 
 
-	call [b_nvs_read]	
+	call [b_nvs_read]
+	
+
 ; 	call [0x58a4]
 ; 	call [0x589c] ; dump_rax
 ; 	call [0x58a4] ; newline
@@ -438,8 +440,21 @@ load_bmfs:
 ; 	mov rax, rcx
 ; 	call [0x589c] ; dump_rax
 ; 	call [0x58a4] ; newline
+; 	mov rax, [0x11c010]
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
+; 	mov rax, [0x11c018]
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
+; 	mov rax, [0x11c020]
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; 
+; 	mov rax, [0x11c028]
+; 	call [0x589c] ; dump_rax
+; 	call [0x58a4] ; newline
 ; load_pause:
 ; 	jmp load_pause
+		
 	jmp poll
 
 load_notfound:

@@ -2018,15 +2018,20 @@ usb_inquiry_scsi:
 ; OUT:	Nothing
 ;	All other registers preserved
 xhci_io:
+	push rdi 
 	push r11
 	push r12
 	push r13
 	push r15
+	;mov r13, 0xdeadbeefdeadbeef
+	;mov qword [0x11c010], r13
 	xor r13, r13
+	mov qword [0x11c010], rax
 	mov r11, rdi
 	shl rax, 3
 	mov r12, rax	
 	mov r15, rcx
+	
 num_sector_loop:
 	call usb_read10_scsi ; iteration 1
 usb_read10_scsi_loop:
@@ -2042,15 +2047,20 @@ usb_read10_scsi_loop:
 	add r11, 512
 	mov rax, r12
 	mov rdi, r11
+	
 	xor r13, r13
 	dec r15
 	cmp r15, 0
 	jg num_sector_loop
 
+	inc r12
+	shr r12, 3
+	mov rax, r12
 	pop r15
 	pop r13
 	pop r12
 	pop r11
+	pop rdi
 	ret
 
 get_ep2_slot:

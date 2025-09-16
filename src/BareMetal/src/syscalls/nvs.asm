@@ -22,15 +22,19 @@ b_nvs_read:
 	push rax
 
 	mov r8, rcx
-
+	;mov qword [0x11c028],rax
 	; Calculate where in physical memory the data should be written to
+	;mov qword [0x11c018], rdi
 	xchg rax, rdi
 	call os_virt_to_phys
 	xchg rax, rdi
-
+	;mov qword [0x11c020], rdi
+	;mov qword [0x11c028], 0
+	mov qword [0x11c020],rax
 b_nvs_read_sector:
 	mov rcx, 1
 	mov ebx, 2			; Read opcode for driver
+	;mov qword [0x11c018],rax
 	call [os_nvs_io]		; Call the non-volatile storage driver IO command
 	add rdi, 4096
 	sub r8, 1
