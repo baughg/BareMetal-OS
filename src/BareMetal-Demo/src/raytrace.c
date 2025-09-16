@@ -124,8 +124,8 @@ vector v_init(f a, f b, f c) {
 }
 
 // Array of spheres (displaying 'Hi!')
-i G[] = {280336, 279040, 279040, 279056, 509456, 278544, 278544, 279056, 278544};
-
+//i G[] = {280336, 279040, 279040, 279056, 509456, 278544, 278544, 279056, 278544};
+i G[] = {0x1120380,0x1120440,0x1320440,0x1320440,0x153C440,0x1922440,0x1922440,0x1122440,0x113C440};
 // Random generator, return a float within range [0-1]
 f R() {
 	return (f)rand() / RAND_MAX;
@@ -145,7 +145,7 @@ i T(vector o, vector d, f *t, vector *n) {
 		m = 1;
 	}
 
-	for (i k = 19; k--;)
+	for (i k = 25; k--;)
 		for (i j = 9; j--;)
 			if (G[j] & 1 << k) {
 				vector p = v_add(o, v_init(-k, 0, -j - 4));
