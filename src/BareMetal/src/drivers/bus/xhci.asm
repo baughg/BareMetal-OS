@@ -2026,7 +2026,7 @@ xhci_io:
 	;mov r13, 0xdeadbeefdeadbeef
 	;mov qword [0x11c010], r13
 	xor r13, r13
-	mov qword [0x11c010], rax
+	;mov qword [0x11c010], rax
 	mov r11, rdi
 	shl rax, 3
 	mov r12, rax	
@@ -2087,7 +2087,7 @@ get_ep2_slot_done:
 ; OUT:	Nothing
 ;	All other registers preserved
 usb_read10_scsi:
-	mov [0x11c008], rax
+	;mov [0x11c008], rax
     push rdi
 	push rax
 	; ######################### SCSI Read(10) command start #########################
