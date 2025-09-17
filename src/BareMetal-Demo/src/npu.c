@@ -82,8 +82,10 @@ int main(void)
     uint32_t* p_npu_config = (uint32_t*)0xc0058000;
     struct pci_config_0* p_pci_config = (struct pci_config_0*)p_npu_config;
     uint64_t device_id = (uint64_t)p_pci_config->header.device_id;
+    p_pci_config->header.command |= 0x2; // Enable MMIO
+    uint64_t command = (uint64_t)p_pci_config->header.command;
     dump_u64(device_id);
-
+    dump_u64(command);
     struct pci_config_header_0 config_ex;
     config_ex.config = *p_pci_config;
 
